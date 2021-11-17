@@ -11,5 +11,11 @@ when it involves compiling ~numpy~ each time. That being said, patches and files
 from this repository should be essentially interoperable with the ~numpy~ repo
 after adjusting for file paths.
 
+- In particular this is meant *only* to test the wrapper generation
+
+*** Stripped out
+- ~np.distutils~ functionality
+    + Currently
+
 * License
 MIT

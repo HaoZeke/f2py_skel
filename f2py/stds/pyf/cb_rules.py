@@ -13,8 +13,7 @@ $Date: 2005/07/20 11:27:58 $
 Pearu Peterson
 
 """
-from . import __version__
-from .auxfuncs import (
+from ..auxfuncs import (
     applyrules, debugcapi, dictappend, errmess, getargs, hasnote, isarray,
     iscomplex, iscomplexarray, iscomplexfunction, isfunction, isintent_c,
     isintent_hide, isintent_in, isintent_inout, isintent_nothide,
@@ -22,7 +21,8 @@ from .auxfuncs import (
     isstringfunction, issubroutine, l_and, l_not, l_or, outmess, replace,
     stripcomma, throw_error
 )
-from . import cfuncs
+from ...codegen import cfuncs
+from ... import __version__
 
 f2py_version = __version__.version
 

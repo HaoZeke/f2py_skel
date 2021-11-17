@@ -17,9 +17,6 @@ Pearu Peterson
 import sys
 import copy
 
-from . import __version__
-
-f2py_version = __version__.version
 errmess = sys.stderr.write
 
 ##################### Definitions ##################
@@ -1330,7 +1327,7 @@ capi_fail:
 
 
 def buildcfuncs():
-    from .capi_maps import c2capi_map
+    from ..stds.pyf.capi_maps import c2capi_map
     for k in c2capi_map.keys():
         m = 'pyarr_from_p_%s1' % k
         cppmacros[

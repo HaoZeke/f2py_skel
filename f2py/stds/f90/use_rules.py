@@ -15,12 +15,10 @@ $Date: 2000/09/10 12:35:43 $
 Pearu Peterson
 
 """
-__version__ = "$Revision: 1.3 $"[10:-1]
-
 f2py_version = 'See `f2py -v`'
 
 
-from .auxfuncs import (
+from ..auxfuncs import (
     applyrules, dictappend, gentitle, hasnote, outmess
 )
 

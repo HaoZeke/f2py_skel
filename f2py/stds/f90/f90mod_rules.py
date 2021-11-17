@@ -13,20 +13,19 @@ $Date: 2005/02/03 19:30:23 $
 Pearu Peterson
 
 """
-__version__ = "$Revision: 1.27 $"[10:-1]
 
 f2py_version = 'See `f2py -v`'
 
 import numpy as np
 
-from . import capi_maps
-from . import func2subr
-from .crackfortran import undo_rmbadname, undo_rmbadname1
+from ..pyf import capi_maps
+from ...codegen import func2subr
+from ...frontend.crackfortran import undo_rmbadname, undo_rmbadname1
 
 # The environment provided by auxfuncs.py is needed for some calls to eval.
 # As the needed functions cannot be determined by static inspection of the
 # code, it is safest to use import * pending a major refactoring of f2py.
-from .auxfuncs import *
+from ..auxfuncs import *
 
 options = {}
 
@@ -85,7 +84,7 @@ fgetdims2_sa = """\
 
 
 def buildhooks(pymod):
-    from . import rules
+    from ...codegen import rules
     ret = {'f90modhooks': [], 'initf90modhooks': [], 'body': [],
            'need': ['F_FUNC', 'arrayobject.h'],
            'separatorsfor': {'includes0': '\n', 'includes': '\n'},
