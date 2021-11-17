@@ -1,0 +1,16 @@
+[tool]
+[tool.poetry]
+name = "f2py-skel"
+version = "0.0.x"
+description = "dummy f2py repo; DO NOT USE"
+license = "MIT"
+readme = "readme.org"
+repository = "https://github.com/HaoZeke/f2py_skel"
+authors = ["NumPy Developers"]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+numpy = "^1.20"
+
+[tool.poetry.dev-dependencies]
+pytest = "^3.4"
