@@ -42,7 +42,7 @@ __all__ = [
     'isstringarray', 'isstringfunction', 'issubroutine',
     'issubroutine_wrap', 'isthreadsafe', 'isunsigned', 'isunsigned_char',
     'isunsigned_chararray', 'isunsigned_long_long',
-    'isunsigned_long_longarray', 'isunsigned_short',
+    'isunsigned_long_longarray', 'isvalidintrinsicmod', 'isunsigned_short',
     'isunsigned_shortarray', 'l_and', 'l_not', 'l_or', 'outmess',
     'replace', 'show', 'stripcomma', 'throw_error',
 ]
@@ -483,6 +483,13 @@ isintent_dict = {isintent_in: 'INTENT_IN', isintent_inout: 'INTENT_INOUT',
 def isprivate(var):
     return 'attrspec' in var and 'private' in var['attrspec']
 
+# Intrinsic modules
+# References:
+# - J3/21-007: Draft Fortran 202x. https://j3-fortran.org/doc/year/21/21-007.pdf
+intrinsic_modules = ["iso_c_binding", "iso_fortran_env", "ieee_exceptions", "ieee_arithmetic", "ieee_features"]
+
+def isvalidintrinsicmod(modu):
+    return modu in intrinsic_modules
 
 def hasinitvalue(var):
     return '=' in var

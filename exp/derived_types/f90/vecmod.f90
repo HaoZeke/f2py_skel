@@ -1,6 +1,8 @@
 ! From https://rgoswami.me/posts/cython-derivedtype-f2py/
 module vec
-  use, intrinsic :: iso_c_binding
+  ! TODO: regex for the version below
+  ! use, intrinsic :: iso_c_binding
+  use iso_c_binding
   implicit none
 
   type, bind(c) :: cartesian
