@@ -6,6 +6,7 @@ import pytest
 
 import numpy as np
 
+from pathlib import Path
 from numpy.testing import assert_, assert_equal
 from numpy.core.multiarray import typeinfo
 from . import util
