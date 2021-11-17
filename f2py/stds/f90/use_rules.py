@@ -27,20 +27,20 @@ usemodule_rules = {
     'body': """
 #begintitle#
 static char doc_#apiname#[] = \"\\\nVariable wrapper signature:\\n\\
-\t #name# = get_#name#()\\n\\
+	 #name# = get_#name#()\\n\\
 Arguments:\\n\\
 #docstr#\";
 extern F_MODFUNC(#usemodulename#,#USEMODULENAME#,#realname#,#REALNAME#);
 static PyObject *#apiname#(PyObject *capi_self, PyObject *capi_args) {
 /*#decl#*/
-\tif (!PyArg_ParseTuple(capi_args, \"\")) goto capi_fail;
+	if (!PyArg_ParseTuple(capi_args, \"\")) goto capi_fail;
 printf(\"c: %d\\n\",F_MODFUNC(#usemodulename#,#USEMODULENAME#,#realname#,#REALNAME#));
-\treturn Py_BuildValue(\"\");
+	return Py_BuildValue(\"\");
 capi_fail:
-\treturn NULL;
+	return NULL;
 }
 """,
-    'method': '\t{\"get_#name#\",#apiname#,METH_VARARGS|METH_KEYWORDS,doc_#apiname#},',
+    'method': '	{\"get_#name#\",#apiname#,METH_VARARGS|METH_KEYWORDS,doc_#apiname#},',
     'need': ['F_MODFUNC']
 }
 
@@ -50,13 +50,13 @@ capi_fail:
 def buildusevars(m, r):
     ret = {}
     outmess(
-        '\t\tBuilding use variable hooks for module "%s" (feature only for F90/F95)...\n' % (m['name']))
+        '		Building use variable hooks for module "%s" (feature only for F90/F95)...\n' % (m['name']))
     varsmap = {}
     revmap = {}
     if 'map' in r:
         for k in r['map'].keys():
             if r['map'][k] in revmap:
-                outmess('\t\t\tVariable "%s<=%s" is already mapped by "%s". Skipping.\n' % (
+                outmess('			Variable "%s<=%s" is already mapped by "%s". Skipping.\n' % (
                     r['map'][k], k, revmap[r['map'][k]]))
             else:
                 revmap[r['map'][k]] = k
@@ -67,11 +67,11 @@ def buildusevars(m, r):
                 if revmap[r['map'][v]] == v:
                     varsmap[v] = r['map'][v]
                 else:
-                    outmess('\t\t\tIgnoring map "%s=>%s". See above.\n' %
+                    outmess('			Ignoring map "%s=>%s". See above.\n' %
                             (v, r['map'][v]))
             else:
                 outmess(
-                    '\t\t\tNo definition for variable "%s=>%s". Skipping.\n' % (v, r['map'][v]))
+                    '			No definition for variable "%s=>%s". Skipping.\n' % (v, r['map'][v]))
     else:
         for v in m['vars'].keys():
             if v in revmap:
@@ -84,7 +84,7 @@ def buildusevars(m, r):
 
 
 def buildusevar(name, realname, vars, usemodulename):
-    outmess('\t\t\tConstructing wrapper function for variable "%s=>%s"...\n' % (
+    outmess('			Constructing wrapper function for variable "%s=>%s"...\n' % (
         name, realname))
     ret = {}
     vrd = {'name': name,
