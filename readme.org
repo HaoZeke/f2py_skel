@@ -1,0 +1,15 @@
+* About
+This is a skeletal version of ~f2py~. Essentially it is stripped out of ~numpy~.
+
+#+begin_quote
+It is *not meant to be used*.
+#+end_quote
+
+** Why?
+The only reason this exists is because the development cycle can be a bit slow
+when it involves compiling ~numpy~ each time. That being said, patches and files
+from this repository should be essentially interoperable with the ~numpy~ repo
+after adjusting for file paths.
+
+* License
+MIT
