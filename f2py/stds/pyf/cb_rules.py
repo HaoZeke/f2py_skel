@@ -542,19 +542,18 @@ def buildcallback(rout, um):
                 rd = dictappend(rd, ar)
                 if '_break' in r:
                     break
-    if 'args' in rd and 'optargs' in rd:
-        if isinstance(rd['optargs'], list):
-            rd['optargs'] = rd['optargs'] + ["""
+    if 'args' in rd and 'optargs' in rd and isinstance(rd['optargs'], list):
+        rd['optargs'] = rd['optargs'] + ["""
 #ifndef F2PY_CB_RETURNCOMPLEX
 ,
 #endif
 """]
-            rd['optargs_nm'] = rd['optargs_nm'] + ["""
+        rd['optargs_nm'] = rd['optargs_nm'] + ["""
 #ifndef F2PY_CB_RETURNCOMPLEX
 ,
 #endif
 """]
-            rd['optargs_td'] = rd['optargs_td'] + ["""
+        rd['optargs_td'] = rd['optargs_td'] + ["""
 #ifndef F2PY_CB_RETURNCOMPLEX
 ,
 #endif
@@ -579,7 +578,7 @@ def buildcallback(rout, um):
     rd['latexdocstrsigns'] = []
     for k in ['docstrreq', 'docstropt', 'docstrout', 'docstrcbs']:
         if k in rd and isinstance(rd[k], list):
-            rd['docstrsigns'] = rd['docstrsigns'] + rd[k]
+            rd['docstrsigns'] += rd[k]
         k = 'latex' + k
         if k in rd and isinstance(rd[k], list):
             rd['latexdocstrsigns'] = rd['latexdocstrsigns'] + rd[k][0:1] +\
