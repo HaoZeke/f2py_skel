@@ -2,6 +2,10 @@
 These are pretty much deprecated, but should have never been in __init__.py
 """
 
+import os
+import sys
+import subprocess
+
 def compile(source,
             modulename='untitled',
             extra_args='',

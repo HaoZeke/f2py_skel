@@ -221,7 +221,7 @@ cb_rout_rules = [
         'docstrsigns': '', 'latexdocstrsigns': '',
         'docstrreq': '    Required arguments:',
         'docstropt': '    Optional arguments:',
-        'docstrout': '    Return objects:',
+        'docstrout': '      Return objects:',
         'docstrcbs': '    Call-back functions:',
         'docreturn': '', 'docsign': '', 'docsignopt': '',
         'latexdocstrreq': '\\noindent Required arguments:',

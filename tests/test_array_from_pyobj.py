@@ -6,6 +6,7 @@ import pytest
 
 import numpy as np
 
+from pathlib import Path
 from numpy.testing import assert_, assert_equal
 from numpy.core.multiarray import typeinfo
 from . import util
@@ -30,10 +31,10 @@ def setup_module():
                              sources=['wrapmodule.c', 'fortranobject.c'],
                              define_macros=[])
         """
-        d = os.path.dirname(__file__)
-        src = [os.path.join(d, 'src', 'array_from_pyobj', 'wrapmodule.c'),
-               os.path.join(d, '..', 'src', 'fortranobject.c'),
-               os.path.join(d, '..', 'src', 'fortranobject.h')]
+        d = Path(__file__)
+        src = [d.parent.resolve().joinpath('src', 'array_from_pyobj', 'wrapmodule.c'),
+               d.parent.parent.resolve().joinpath('f2py', 'csrcs', 'fortranobject.c'),
+               d.parent.parent.resolve().joinpath('f2py', 'csrcs', 'fortranobject.h')]
         wrap = util.build_module_distutils(src, config_code,
                                            'test_array_from_pyobj_ext')
 

@@ -1,6 +1,38 @@
+[build-system]
+requires = ["flit"]
+build-backend = "flit.buildapi"
+
+[project]
+name = "f2py"
+version = "0.0.1"
+authors = [
+    {name = "Rohit Goswami", email = "rog32@hi.is"},
+]
+readme = "readme.org"
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+]
+requires-python = ">=3.7"
+dynamic = ["description"]
+
+dependencies = [
+    "numpy >=1.21",
+    "python_version >= '3.8'",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest >=2.7.3",
+    "pytest-cov",
+]
+doc = ["sphinx"]
+
+[project.scripts]
+f2py = "f2py.frontend.f2py2e:main"
+
 [tool]
 [tool.poetry]
-name = "f2py-skel"
+name = "f2py"
 version = "0.0.x"
 description = "dummy f2py repo; DO NOT USE"
 license = "MIT"

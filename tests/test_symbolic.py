@@ -1,5 +1,5 @@
 from numpy.testing import assert_raises
-from numpy.f2py.symbolic import (
+from f2py.stds.symbolic import (
     Expr, Op, ArithOp, Language,
     as_symbol, as_number, as_string, as_array, as_complex,
     as_terms, as_factors, eliminate_quotes, insert_quotes,
