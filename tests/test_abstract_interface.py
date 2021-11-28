@@ -1,6 +1,6 @@
 import textwrap
 from . import util
-from f2py.frontend import crackfortran
+from f2py_skel.frontend import crackfortran
 
 
 class TestAbstractInterface(util.F2PyTest):
