@@ -15,6 +15,7 @@ import atexit
 import textwrap
 import re
 import pytest
+import contextlib
 
 from pathlib import Path
 from numpy.compat import asbytes, asstr
@@ -365,3 +366,13 @@ def getpath(*a):
     # Package root
     d = Path(__file__).parent.parent.resolve()
     return d.joinpath(*a)
+
+
+@contextlib.contextmanager
+def switchdir(path):
+    curpath = Path.cwd()
+    os.chdir(path)
+    try:
+        yield
+    finally:
+        os.chdir(curpath)

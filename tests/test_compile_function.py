@@ -22,6 +22,7 @@ def setup_module():
 
 # extra_args can be a list (since gh-11937) or string.
 # also test absence of extra_args
+@pytest.mark.xfail(reason="See https://github.com/HaoZeke/f2py_skel/issues/2")
 @pytest.mark.parametrize(
     "extra_args", [['--noopt', '--debug'], '--noopt --debug', '']
     )
@@ -49,19 +50,21 @@ def test_f2py_init_compile(extra_args):
     # try running compile() with and without a source_fn provided so
     # that the code path where a temporary file for writing Fortran
     # source is created is also explored
+    for source_fn in [target, None]:
         # mimic the path changing behavior used by build_module() in
         # util.py, but don't actually use build_module() because it has
         # its own invocation of subprocess that circumvents the
         # f2py.compile code block under test
-    ret_val = f2py_skel.compile(
-        fsource,
-        modulename=modname,
-        extra_args=extra_args,
-        source_fn=target
-    )
+        with util.switchdir(moddir):
+            ret_val = f2py_skel.compile(
+                fsource,
+                modulename=modname,
+                extra_args=extra_args,
+                source_fn=source_fn
+            )
 
-    # check for compile success return value
-    assert_equal(ret_val, 0)
+            # check for compile success return value
+            assert_equal(ret_val, 0)
 
         # we are not currently able to import the Python-Fortran
         # interface module on Windows / Appveyor, even though we do get
@@ -103,13 +106,15 @@ def test_f2py_init_compile_bad_cmd():
         sys.executable = temp
 
 
+@pytest.mark.xfail(reason="See https://github.com/HaoZeke/f2py_skel/issues/2")
 @pytest.mark.parametrize('fsource',
         ['program test_f2py\nend program test_f2py',
          b'program test_f2py\nend program test_f2py',])
 def test_compile_from_strings(tmpdir, fsource):
     # Make sure we can compile str and bytes gh-12796
-    ret_val = f2py_skel.compile(
-        fsource,
-        modulename='test_compile_from_strings',
-        extension='.f90')
-    assert_equal(ret_val, 0)
+    with util.switchdir(tmpdir):
+        ret_val = f2py_skel.compile(
+            fsource,
+            modulename='test_compile_from_strings',
+            extension='.f90')
+        assert_equal(ret_val, 0)
