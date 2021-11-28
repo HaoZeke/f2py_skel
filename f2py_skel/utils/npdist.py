@@ -93,7 +93,7 @@ def compile(source,
 
         c = [sys.executable,
              '-c',
-             'import numpy.f2py as f2py2e;f2py2e.main()'] + args
+             'import f2py_skel as f2py2e;f2py2e.main()'] + args
         try:
             cp = subprocess.run(c, stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE)
