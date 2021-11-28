@@ -1,4 +1,3 @@
-import os
 import sys
 import copy
 import platform
@@ -12,7 +11,6 @@ from numpy.core.multiarray import typeinfo
 from . import util
 
 wrap = None
-
 
 def setup_module():
     """
@@ -31,10 +29,9 @@ def setup_module():
                              sources=['wrapmodule.c', 'fortranobject.c'],
                              define_macros=[])
         """
-        d = Path(__file__)
-        src = [d.parent.resolve().joinpath('src', 'array_from_pyobj', 'wrapmodule.c'),
-               d.parent.parent.resolve().joinpath('f2py', 'csrcs', 'fortranobject.c'),
-               d.parent.parent.resolve().joinpath('f2py', 'csrcs', 'fortranobject.h')]
+        src = [util.getpath('tests', 'src', 'array_from_pyobj', 'wrapmodule.c'),
+               util.getpath('f2py_skel', 'csrcs', 'fortranobject.c'),
+               util.getpath('f2py_skel', 'csrcs', 'fortranobject.h')]
         wrap = util.build_module_distutils(src, config_code,
                                            'test_array_from_pyobj_ext')
 

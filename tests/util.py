@@ -3,6 +3,7 @@ Utility functions for
 
 - building and importing modules on test time, using a temporary location
 - detecting if compilers are present
+- determining paths to tests
 
 """
 import os
@@ -14,7 +15,9 @@ import atexit
 import textwrap
 import re
 import pytest
+import contextlib
 
+from pathlib import Path
 from numpy.compat import asbytes, asstr
 from numpy.testing import temppath
 from importlib import import_module
@@ -93,6 +96,9 @@ def build_module(source_files, options=[], skip=[], only=[], module_name=None):
 
     """
 
+    code = ("import sys; sys.path = %s; import f2py_skel; "
+            "f2py_skel.main()" % repr(sys.path))
+
     d = get_module_dir()
 
     # Copy files
@@ -122,7 +128,7 @@ def build_module(source_files, options=[], skip=[], only=[], module_name=None):
     cwd = os.getcwd()
     try:
         os.chdir(d)
-        cmd = [sys.executable, '-m', 'f2py'] + f2py_opts
+        cmd = [sys.executable, '-c', code] + f2py_opts
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                              stderr=subprocess.STDOUT)
         out, err = p.communicate()
@@ -331,9 +337,9 @@ class F2PyTest:
         needs_f77 = False
         needs_f90 = False
         for fn in codes:
-            if fn.endswith('.f'):
+            if str( fn ).endswith('.f'):
                 needs_f77 = True
-            elif fn.endswith('.f90'):
+            elif str( fn ).endswith('.f90'):
                 needs_f90 = True
         if needs_f77 and not has_f77_compiler():
             pytest.skip("No Fortran 77 compiler available")
@@ -351,3 +357,22 @@ class F2PyTest:
             self.module = build_module(self.sources, options=self.options,
                                        skip=self.skip, only=self.only,
                                        module_name=self.module_name)
+
+#
+# Helper functions
+#
+
+def getpath(*a):
+    # Package root
+    d = Path(__file__).parent.parent.resolve()
+    return d.joinpath(*a)
+
+
+@contextlib.contextmanager
+def switchdir(path):
+    curpath = Path.cwd()
+    os.chdir(path)
+    try:
+        yield
+    finally:
+        os.chdir(curpath)

@@ -13,7 +13,8 @@ $Date: 2005/07/20 11:27:58 $
 Pearu Peterson
 
 """
-from ..auxfuncs import (
+from f2py_skel import __version__
+from f2py_skel.stds.auxfuncs import (
     applyrules, debugcapi, dictappend, errmess, getargs, hasnote, isarray,
     iscomplex, iscomplexarray, iscomplexfunction, isfunction, isintent_c,
     isintent_hide, isintent_in, isintent_inout, isintent_nothide,
@@ -21,8 +22,7 @@ from ..auxfuncs import (
     isstringfunction, issubroutine, l_and, l_not, l_or, outmess, replace,
     stripcomma, throw_error
 )
-from ...codegen import cfuncs
-from ... import __version__
+from f2py_skel.codegen import cfuncs
 
 f2py_version = __version__.version
 
@@ -221,7 +221,7 @@ cb_rout_rules = [
         'docstrsigns': '', 'latexdocstrsigns': '',
         'docstrreq': '    Required arguments:',
         'docstropt': '    Optional arguments:',
-        'docstrout': '      Return objects:',
+        'docstrout': '    Return objects:',
         'docstrcbs': '    Call-back functions:',
         'docreturn': '', 'docsign': '', 'docsignopt': '',
         'latexdocstrreq': '\\noindent Required arguments:',

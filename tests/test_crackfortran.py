@@ -1,9 +1,9 @@
 import pytest
 import numpy as np
 from numpy.testing import assert_array_equal, assert_equal
-from f2py.frontend.crackfortran import markinnerspaces
+from f2py_skel.frontend.crackfortran import markinnerspaces
 from . import util
-from f2py.frontend import crackfortran
+from f2py_skel.frontend import crackfortran
 import textwrap
 
 

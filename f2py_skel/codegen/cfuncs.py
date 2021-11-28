@@ -17,6 +17,9 @@ Pearu Peterson
 import sys
 import copy
 
+from f2py_skel import __version__
+
+f2py_version = __version__.version
 errmess = sys.stderr.write
 
 ##################### Definitions ##################
@@ -842,20 +845,26 @@ int_from_pyobj(int* v, PyObject *obj, const char *errmess)
         return !(*v == -1 && PyErr_Occurred());
     }
 
-    if (PyComplex_Check(obj))
-        tmp = PyObject_GetAttrString(obj,\"real\");
-    else if (PyBytes_Check(obj) || PyUnicode_Check(obj))
-        /*pass*/;
-    else if (PySequence_Check(obj))
-        tmp = PySequence_GetItem(obj, 0);
-    if (tmp) {
+    if (PyComplex_Check(obj)) {
         PyErr_Clear();
+        tmp = PyObject_GetAttrString(obj,\"real\");
+    }
+    else if (PyBytes_Check(obj) || PyUnicode_Check(obj)) {
+        /*pass*/;
+    }
+    else if (PySequence_Check(obj)) {
+        PyErr_Clear();
+        tmp = PySequence_GetItem(obj, 0);
+    }
+
+    if (tmp) {
         if (int_from_pyobj(v, tmp, errmess)) {
             Py_DECREF(tmp);
             return 1;
         }
         Py_DECREF(tmp);
     }
+
     {
         PyObject* err = PyErr_Occurred();
         if (err == NULL) {
@@ -885,15 +894,19 @@ long_from_pyobj(long* v, PyObject *obj, const char *errmess) {
         return !(*v == -1 && PyErr_Occurred());
     }
 
-    if (PyComplex_Check(obj))
+    if (PyComplex_Check(obj)) {
+        PyErr_Clear();
         tmp = PyObject_GetAttrString(obj,\"real\");
-    else if (PyBytes_Check(obj) || PyUnicode_Check(obj))
+    }
+    else if (PyBytes_Check(obj) || PyUnicode_Check(obj)) {
         /*pass*/;
-    else if (PySequence_Check(obj))
-        tmp = PySequence_GetItem(obj,0);
+    }
+    else if (PySequence_Check(obj)) {
+        PyErr_Clear();
+        tmp = PySequence_GetItem(obj, 0);
+    }
 
     if (tmp) {
-        PyErr_Clear();
         if (long_from_pyobj(v, tmp, errmess)) {
             Py_DECREF(tmp);
             return 1;
@@ -931,14 +944,19 @@ long_long_from_pyobj(long_long* v, PyObject *obj, const char *errmess)
         return !(*v == -1 && PyErr_Occurred());
     }
 
-    if (PyComplex_Check(obj))
-        tmp = PyObject_GetAttrString(obj,\"real\");
-    else if (PyBytes_Check(obj) || PyUnicode_Check(obj))
-        /*pass*/;
-    else if (PySequence_Check(obj))
-        tmp = PySequence_GetItem(obj,0);
-    if (tmp) {
+    if (PyComplex_Check(obj)) {
         PyErr_Clear();
+        tmp = PyObject_GetAttrString(obj,\"real\");
+    }
+    else if (PyBytes_Check(obj) || PyUnicode_Check(obj)) {
+        /*pass*/;
+    }
+    else if (PySequence_Check(obj)) {
+        PyErr_Clear();
+        tmp = PySequence_GetItem(obj, 0);
+    }
+
+    if (tmp) {
         if (long_long_from_pyobj(v, tmp, errmess)) {
             Py_DECREF(tmp);
             return 1;
@@ -998,14 +1016,20 @@ double_from_pyobj(double* v, PyObject *obj, const char *errmess)
         Py_DECREF(tmp);
         return !(*v == -1.0 && PyErr_Occurred());
     }
-    if (PyComplex_Check(obj))
-        tmp = PyObject_GetAttrString(obj,\"real\");
-    else if (PyBytes_Check(obj) || PyUnicode_Check(obj))
-        /*pass*/;
-    else if (PySequence_Check(obj))
-        tmp = PySequence_GetItem(obj,0);
-    if (tmp) {
+
+    if (PyComplex_Check(obj)) {
         PyErr_Clear();
+        tmp = PyObject_GetAttrString(obj,\"real\");
+    }
+    else if (PyBytes_Check(obj) || PyUnicode_Check(obj)) {
+        /*pass*/;
+    }
+    else if (PySequence_Check(obj)) {
+        PyErr_Clear();
+        tmp = PySequence_GetItem(obj, 0);
+    }
+
+    if (tmp) {
         if (double_from_pyobj(v,tmp,errmess)) {Py_DECREF(tmp); return 1;}
         Py_DECREF(tmp);
     }
@@ -1327,7 +1351,7 @@ capi_fail:
 
 
 def buildcfuncs():
-    from ..stds.pyf.capi_maps import c2capi_map
+    from f2py_skel.stds.pyf.capi_maps import c2capi_map
     for k in c2capi_map.keys():
         m = 'pyarr_from_p_%s1' % k
         cppmacros[
