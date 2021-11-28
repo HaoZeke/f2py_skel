@@ -93,8 +93,8 @@ def build_module(source_files, options=[], skip=[], only=[], module_name=None):
 
     """
 
-    code = ("import sys; sys.path = %s; from f2py_skel.frontend import f2py2e; "
-            "f2py2e.main()" % repr(sys.path))
+    code = ("import sys; sys.path = %s; import f2py_skel; "
+            "f2py_skel.main()" % repr(sys.path))
 
     d = get_module_dir()
 
