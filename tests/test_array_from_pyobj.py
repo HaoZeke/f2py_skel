@@ -1,4 +1,3 @@
-import os
 import sys
 import copy
 import platform
@@ -33,8 +32,8 @@ def setup_module():
         """
         d = Path(__file__)
         src = [d.parent.resolve().joinpath('src', 'array_from_pyobj', 'wrapmodule.c'),
-               d.parent.parent.resolve().joinpath('f2py', 'csrcs', 'fortranobject.c'),
-               d.parent.parent.resolve().joinpath('f2py', 'csrcs', 'fortranobject.h')]
+               d.parent.parent.resolve().joinpath('f2py_skel', 'csrcs', 'fortranobject.c'),
+               d.parent.parent.resolve().joinpath('f2py_skel', 'csrcs', 'fortranobject.h')]
         wrap = util.build_module_distutils(src, config_code,
                                            'test_array_from_pyobj_ext')
 

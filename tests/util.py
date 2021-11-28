@@ -93,6 +93,9 @@ def build_module(source_files, options=[], skip=[], only=[], module_name=None):
 
     """
 
+    code = ("import sys; sys.path = %s; import f2py_skel as f2py2e; "
+            "f2py2e.main()" % repr(sys.path))
+
     d = get_module_dir()
 
     # Copy files
@@ -122,7 +125,7 @@ def build_module(source_files, options=[], skip=[], only=[], module_name=None):
     cwd = os.getcwd()
     try:
         os.chdir(d)
-        cmd = [sys.executable, '-m', 'f2py'] + f2py_opts
+        cmd = [sys.executable, '-c', code] + f2py_opts
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                              stderr=subprocess.STDOUT)
         out, err = p.communicate()
