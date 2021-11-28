@@ -19,7 +19,8 @@ import sys
 import types
 from functools import reduce
 
-from ..codegen import cfuncs
+from f2py_skel import __version__
+from f2py_skel.codegen import cfuncs
 
 __all__ = [
     'applyrules', 'debugcapi', 'dictappend', 'errmess', 'gentitle',
@@ -45,6 +46,9 @@ __all__ = [
     'isunsigned_shortarray', 'l_and', 'l_not', 'l_or', 'outmess',
     'replace', 'show', 'stripcomma', 'throw_error',
 ]
+
+
+f2py_version = __version__.version
 
 
 errmess = sys.stderr.write
@@ -644,7 +648,7 @@ def getcallprotoargument(rout, cb_map={}):
         outmess(
             'warning: callstatement is defined without callprotoargument\n')
         return
-    from .pyf.capi_maps import getctype
+    from f2py_skel.stds.pyf.capi_maps import getctype
     arg_types, arg_types2 = [], []
     if l_and(isstringfunction, l_not(isfunction_wrap))(rout):
         arg_types.extend(['char*', 'size_t'])

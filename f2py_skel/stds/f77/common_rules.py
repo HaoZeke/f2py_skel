@@ -13,13 +13,15 @@ $Date: 2005/05/06 10:57:33 $
 Pearu Peterson
 
 """
+from f2py_skel import __version__
+f2py_version = __version__.version
 
-from ..auxfuncs import (
+from f2py_skel.stds.auxfuncs import (
     hasbody, hascommon, hasnote, isintent_hide, outmess
 )
-from ..pyf import capi_maps
-from ...codegen import func2subr
-from ...frontend.crackfortran import rmbadname
+from f2py_skel.stds.pyf import capi_maps
+from f2py_skel.codegen import func2subr
+from f2py_skel.frontend.crackfortran import rmbadname
 
 
 def findcommonblocks(block, top=1):

@@ -11,20 +11,19 @@ $Date: 2005/05/06 10:57:33 $
 Pearu Peterson
 
 """
-from ... import __version__
+from f2py_skel import __version__
+f2py_version = __version__.version
 
 import copy
 import re
 import os
-from ...frontend.crackfortran import markoutercomma
-from . import cb_rules
-
-f2py_version = __version__.version
+from f2py_skel.frontend.crackfortran import markoutercomma
+from f2py_skel.stds.pyf import cb_rules
 
 # The environment provided by auxfuncs.py is needed for some calls to eval.
 # As the needed functions cannot be determined by static inspection of the
 # code, it is safest to use import * pending a major refactoring of f2py.
-from ..auxfuncs import *
+from f2py_skel.stds.auxfuncs import *
 
 __all__ = [
     'getctype', 'getstrlength', 'getarrdims', 'getpydocsign',

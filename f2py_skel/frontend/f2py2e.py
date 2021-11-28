@@ -19,15 +19,14 @@ import os
 import pprint
 import re
 
-from ..frontend import crackfortran
-from ..codegen import cfuncs
-from ..codegen import rules
-from ..stds.pyf import cb_rules
-from ..stds import auxfuncs
-from ..stds.pyf import capi_maps
-from ..stds.f90 import f90mod_rules
-
-from .. import __version__
+from f2py_skel.frontend import crackfortran
+from f2py_skel.codegen import rules
+from f2py_skel.stds.pyf import cb_rules
+from f2py_skel.stds import auxfuncs
+from f2py_skel.codegen import cfuncs
+from f2py_skel.stds.f90 import f90mod_rules
+from f2py_skel import __version__
+from f2py_skel.stds.pyf import capi_maps
 
 f2py_version = __version__.version
 numpy_version = __version__.version

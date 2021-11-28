@@ -13,12 +13,13 @@ $Date: 2004/11/26 11:13:06 $
 Pearu Peterson
 
 """
+__version__ = "$Revision: 1.16 $"[10:-1]
 
 f2py_version = 'See `f2py -v`'
 
 import copy
 
-from ..stds.auxfuncs import (
+from f2py_skel.stds.auxfuncs import (
     getfortranname, isexternal, isfunction, isfunction_wrap, isintent_in,
     isintent_out, islogicalfunction, ismoduleroutine, isscalar,
     issubroutine, issubroutine_wrap, outmess, show
