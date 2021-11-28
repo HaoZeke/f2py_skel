@@ -1,5 +1,5 @@
 * About
-This is a skeletal version of ~f2py~. Essentially it is stripped out of ~numpy~.
+This is a skeletal version of ~f2py~. Essentially it is stripped out of ~numpy~. Uses ~poetry~, and ~cocogitto~ for enforcing ~numpy~ guidelines for commits.
 
 #+begin_quote
 It is *not meant to be used*.
@@ -10,6 +10,13 @@ The only reason this exists is because the development cycle can be a bit slow
 when it involves compiling ~numpy~ each time. That being said, patches and files
 from this repository should be essentially interoperable with the ~numpy~ repo
 after adjusting for file paths.
+
+** Getting started
+
+#+begin_src bash
+poetry shell
+pytest
+#+end_src
 
 ** To be implemented
 - [ ] Tests
