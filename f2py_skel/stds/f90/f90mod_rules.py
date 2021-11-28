@@ -85,7 +85,7 @@ fgetdims2_sa = """\
 
 
 def buildhooks(pymod):
-    from . import rules
+    from f2py_skel.codegen import rules
     ret = {'f90modhooks': [], 'initf90modhooks': [], 'body': [],
            'need': ['F_FUNC', 'arrayobject.h'],
            'separatorsfor': {'includes0': '\n', 'includes': '\n'},
