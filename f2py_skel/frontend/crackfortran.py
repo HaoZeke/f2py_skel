@@ -154,6 +154,7 @@ from f2py_skel import __version__
 # code, it is safest to use import * pending a major refactoring of f2py.
 from f2py_skel.stds.auxfuncs import *
 from f2py_skel.stds import symbolic
+from f2py_skel import __version__
 
 f2py_version = __version__.version
 
