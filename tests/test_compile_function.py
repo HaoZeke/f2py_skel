@@ -49,38 +49,33 @@ def test_f2py_init_compile(extra_args):
     # try running compile() with and without a source_fn provided so
     # that the code path where a temporary file for writing Fortran
     # source is created is also explored
-    for source_fn in [target, None]:
         # mimic the path changing behavior used by build_module() in
         # util.py, but don't actually use build_module() because it has
         # its own invocation of subprocess that circumvents the
         # f2py.compile code block under test
-        try:
-            os.chdir(moddir)
-            ret_val = f2py_skel.compile(
-                fsource,
-                modulename=modname,
-                extra_args=extra_args,
-                source_fn=source_fn
-                )
-        finally:
-            os.chdir(cwd)
+    ret_val = f2py_skel.compile(
+        fsource,
+        modulename=modname,
+        extra_args=extra_args,
+        source_fn=target
+    )
 
-        # check for compile success return value
-        assert_equal(ret_val, 0)
+    # check for compile success return value
+    assert_equal(ret_val, 0)
 
         # we are not currently able to import the Python-Fortran
         # interface module on Windows / Appveyor, even though we do get
         # successful compilation on that platform with Python 3.x
-        if sys.platform != 'win32':
+    if sys.platform != 'win32':
             # check for sensible result of Fortran function; that means
             # we can import the module name in Python and retrieve the
             # result of the sum operation
-            return_check = import_module(modname)
-            calc_result = return_check.foo()
-            assert_equal(calc_result, 15)
+        return_check = import_module(modname)
+        calc_result = return_check.foo()
+        assert_equal(calc_result, 15)
             # Removal from sys.modules, is not as such necessary. Even with
             # removal, the module (dict) stays alive.
-            del sys.modules[modname]
+        del sys.modules[modname]
 
 
 def test_f2py_init_compile_failure():
@@ -113,13 +108,8 @@ def test_f2py_init_compile_bad_cmd():
          b'program test_f2py\nend program test_f2py',])
 def test_compile_from_strings(tmpdir, fsource):
     # Make sure we can compile str and bytes gh-12796
-    cwd = os.getcwd()
-    try:
-        os.chdir(str(tmpdir))
-        ret_val = f2py_skel.compile(
-                fsource,
-                modulename='test_compile_from_strings',
-                extension='.f90')
-        assert_equal(ret_val, 0)
-    finally:
-        os.chdir(cwd)
+    ret_val = f2py_skel.compile(
+        fsource,
+        modulename='test_compile_from_strings',
+        extension='.f90')
+    assert_equal(ret_val, 0)
