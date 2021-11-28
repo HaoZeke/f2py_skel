@@ -4,10 +4,11 @@ version = "0.0.1"
 description = "A skeletal F2PY clone"
 authors = ["Rohit Goswami <rog32@hi.is>"]
 license = "MIT"
+include = ["*.c", "*.h"]
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.11"
-numpy = "^1.21.4"
+numpy = { git = "https://github.com/numpy/numpy.git", rev = "main" }
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.5"
