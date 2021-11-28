@@ -1,6 +1,7 @@
 import os
 import pytest
 
+import f2py_skel
 import numpy as np
 from numpy.testing import assert_, assert_raises, assert_equal, assert_string_equal
 
@@ -48,8 +49,7 @@ class TestNumpyVersionAttribute(util.F2PyTest):
 
 
 def test_include_path():
-    import f2py
-    incdir = f2py.get_include()
+    incdir = f2py_skel.get_include()
     fnames_in_dir = os.listdir(incdir)
     for fname in ('fortranobject.c', 'fortranobject.h'):
         assert fname in fnames_in_dir
