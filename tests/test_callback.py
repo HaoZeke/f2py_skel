@@ -198,7 +198,7 @@ cf2py  intent(out) r
 
         def runner(name):
             try:
-                for j in range(50):
+                for _ in range(50):
                     r = self.module.t(cb)
                     assert_(r == 42)
                     self.check_function(name)

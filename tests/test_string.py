@@ -111,10 +111,7 @@ class TestFixedString(util.F2PyTest):
         assert isinstance(s, bytes)
         if end is None:
             end = len(s)
-        i = 0
-        for j in range(start, min(end, len(s))):
-            i += s[j] * 10 ** j
-        return i
+        return sum(s[j] * 10 ** j for j in range(start, min(end, len(s))))
 
     def _get_input(self, intent='in'):
         if intent in ['in']:

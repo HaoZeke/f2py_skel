@@ -40,7 +40,7 @@ def findf90modules(m):
         if ismodule(b):
             ret.append(b)
         else:
-            ret = ret + findf90modules(b)
+            ret += findf90modules(b)
     return ret
 
 fgetdims1 = """\

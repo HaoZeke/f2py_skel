@@ -30,7 +30,7 @@ def findcommonblocks(block, top=1):
             ret.append((key, value, vars_))
     elif hasbody(block):
         for b in block['body']:
-            ret = ret + findcommonblocks(b, 0)
+            ret += findcommonblocks(b, 0)
     if top:
         tret = []
         names = []
