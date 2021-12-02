@@ -19,6 +19,27 @@ pytest
 #+end_src
 
 ** To be implemented
-- [ ] Tests
+- [X] Tests
+** Plans
+- The type support should be similar to the module and is similar to subroutine
+- Resolve the intrinsic C types
+  + e.g. ~C_INT~ this should be the same size from the Fortran and C compiler
+- Start with string and then generalize
+- Check ~ISO_Fortran_binding.h~ in ~gcc~, ~flang~
+  + Intel has [[https://www.intel.com/content/www/us/en/develop/documentation/fortran-compiler-oneapi-dev-guide-and-reference/top/compiler-reference/mixed-language-programming/standard-tools-for-interoperability/c-structures-typedefs-macros-for-interoperability.html][this file]] and [[https://www.intel.com/content/www/us/en/develop/documentation/fortran-compiler-oneapi-dev-guide-and-reference/top/compiler-reference/mixed-language-programming/standard-tools-for-interoperability/interoperating-with-arguments-using-c-descriptors.html][also this]]
+  + Check how MSVC manages and we can perhaps provide a fallback
+    + Make an example with all the types and check
+- Subroutines can be ignored
+- Make more examples
+- Speed up the Python-C side with perhaps ctypes and passing pointers
+- A wrapper can make a new function which will take the python object and will create a single structure instance, and return a pointer, this means the Python side would have a C pointer which can be passed to the real Fortran functions
+- ~Fortranobj~ has the pointer and access methods
+  + Augment it for the Python-C structs
+  + Also how the ~common~ is implemented (pointer to common and then block information)
+- For ~crackfortran~ use the ~cmap~ methods to recognize ~c_double~, ~c_float~ and ~c_int~
+- Add a flag and generate the empty files
+- Show an example of do concurrent from Python
+  + A simple fortran program with these features which can be shown to work as fast from Python
+  + Compare to the C implementation
 * License
 MIT
