@@ -54,8 +54,8 @@ import os
 import time
 import copy
 
-# __version__.version is now the same as the NumPy version
 from f2py_skel import __version__
+
 f2py_version = __version__.version
 numpy_version = __version__.version
 

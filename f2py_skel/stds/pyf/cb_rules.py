@@ -22,6 +22,7 @@ from f2py_skel.stds.auxfuncs import (
     isstringfunction, issubroutine, l_and, l_not, l_or, outmess, replace,
     stripcomma, throw_error
 )
+
 from f2py_skel.codegen import cfuncs
 
 f2py_version = __version__.version
