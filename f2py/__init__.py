@@ -1,10 +1,10 @@
 """Skeleton Fortran to Python Interface Generator."""
 
-from . import frontend
-from . import __version__
+from f2py import frontend
+from f2py import __version__
 # Helpers
-from .utils.pathhelper import get_include
+from f2py.utils.pathhelper import get_include
 # Build tool
-from .utils.npdist import compile
+from f2py.utils.npdist import compile
 
 __author__ = """Rohit Goswami"""

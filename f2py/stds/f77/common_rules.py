@@ -14,12 +14,12 @@ Pearu Peterson
 
 """
 
-from ..auxfuncs import (
+from f2py.stds.auxfuncs import (
     hasbody, hascommon, hasnote, isintent_hide, outmess
 )
-from ..pyf import capi_maps
-from ...codegen import func2subr
-from ...frontend.crackfortran import rmbadname
+from f2py.stds.pyf import capi_maps
+from f2py.codegen import func2subr
+from f2py.frontend.crackfortran import rmbadname
 
 
 def findcommonblocks(block, top=1):

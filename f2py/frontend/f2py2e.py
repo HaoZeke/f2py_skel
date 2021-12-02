@@ -19,15 +19,15 @@ import os
 import pprint
 import re
 
-from ..frontend import crackfortran
-from ..codegen import cfuncs
-from ..codegen import rules
-from ..stds.pyf import cb_rules
-from ..stds import auxfuncs
-from ..stds.pyf import capi_maps
-from ..stds.f90 import f90mod_rules
+from f2py.frontend import crackfortran
+from f2py.codegen import cfuncs
+from f2py.codegen import rules
+from f2py.stds.pyf import cb_rules
+from f2py.stds import auxfuncs
+from f2py.stds.pyf import capi_maps
+from f2py.stds.f90 import f90mod_rules
 
-from .. import __version__
+from f2py import __version__
 
 f2py_version = __version__.version
 numpy_version = __version__.version

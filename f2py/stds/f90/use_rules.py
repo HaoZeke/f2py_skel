@@ -18,7 +18,7 @@ Pearu Peterson
 f2py_version = 'See `f2py -v`'
 
 
-from ..auxfuncs import (
+from f2py.stds.auxfuncs import (
     applyrules, dictappend, gentitle, hasnote, outmess
 )
 

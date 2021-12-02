@@ -18,9 +18,9 @@ f2py_version = 'See `f2py -v`'
 
 import numpy as np
 
-from ..pyf import capi_maps
-from ...codegen import func2subr
-from ...frontend.crackfortran import undo_rmbadname, undo_rmbadname1
+from f2py.stds.pyf import capi_maps
+from f2py.codegen import func2subr
+from f2py.frontend.crackfortran import undo_rmbadname, undo_rmbadname1
 
 # The environment provided by auxfuncs.py is needed for some calls to eval.
 # As the needed functions cannot be determined by static inspection of the

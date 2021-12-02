@@ -19,7 +19,7 @@ import sys
 import types
 from functools import reduce
 
-from ..codegen import cfuncs
+from f2py.codegen import cfuncs
 
 __all__ = [
     'applyrules', 'debugcapi', 'dictappend', 'errmess', 'gentitle',

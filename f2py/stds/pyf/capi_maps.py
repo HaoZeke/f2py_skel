@@ -16,8 +16,8 @@ from ... import __version__
 import copy
 import re
 import os
-from ...frontend.crackfortran import markoutercomma
-from . import cb_rules
+from f2py.frontend.crackfortran import markoutercomma
+from f2py.stds.pyf import cb_rules
 
 f2py_version = __version__.version
 

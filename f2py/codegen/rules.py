@@ -54,12 +54,12 @@ import os
 import time
 import copy
 
-from .. import __version__
+from f2py import __version__
 
 f2py_version = __version__.version
 numpy_version = __version__.version
 
-from ..stds.auxfuncs import (
+from f2py.stds.auxfuncs import (
     applyrules, debugcapi, dictappend, errmess, gentitle, getargs2,
     hascallstatement, hasexternals, hasinitvalue, hasnote, hasresultnote,
     isarray, isarrayofstrings, iscomplex, iscomplexarray,
@@ -76,12 +76,12 @@ from ..stds.auxfuncs import (
     l_and, l_not, l_or, outmess, replace, stripcomma, requiresf90wrapper
 )
 
-from ..stds.pyf import capi_maps
-from ..stds.f77 import common_rules
-from ..stds.f90 import use_rules
-from ..stds.f90 import f90mod_rules
-from ..codegen import func2subr
-from ..codegen import cfuncs
+from f2py.stds.pyf import capi_maps
+from f2py.stds.f77 import common_rules
+from f2py.stds.f90 import use_rules
+from f2py.stds.f90 import f90mod_rules
+from f2py.codegen import func2subr
+from f2py.codegen import cfuncs
 
 options = {}
 sepdict = {}
