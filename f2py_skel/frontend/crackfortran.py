@@ -241,9 +241,10 @@ def outmess(line, flag=1):
         sys.stdout.write(line)
 
 re._MAXCACHE = 50
-defaultimplicitrules = {}
-for c in "abcdefghopqrstuvwxyz$_":
-    defaultimplicitrules[c] = {'typespec': 'real'}
+defaultimplicitrules = {
+    c: {'typespec': 'real'} for c in "abcdefghopqrstuvwxyz$_"
+}
+
 for c in "ijklmn":
     defaultimplicitrules[c] = {'typespec': 'integer'}
 badnames = {}
@@ -375,10 +376,7 @@ def readfortrancode(ffile, dowithline=show, istop=1):
                 strictf77 = 1
             elif is_free_format(currentfilename) and not _has_fix_header(l):
                 sourcecodeform = 'free'
-            if strictf77:
-                beginpattern = beginpattern77
-            else:
-                beginpattern = beginpattern90
+            beginpattern = beginpattern77 if strictf77 else beginpattern90
             outmess('\tReading file %s (format:%s%s)\n'
                     % (repr(currentfilename), sourcecodeform,
                        strictf77 and ',strict' or ''))
@@ -395,13 +393,7 @@ def readfortrancode(ffile, dowithline=show, istop=1):
             if rl[:5].lower() == '!f2py':  # f2py directive
                 l, _ = split_by_unquoted(l + 4 * ' ' + rl[5:], '!')
         if l.strip() == '':  # Skip empty line
-            if sourcecodeform == 'free':
-                # In free form, a statement continues in the next line
-                # that is not a comment line [3.3.2.4^1], lines with
-                # blanks are comment lines [3.3.2.3^1]. Hence, the
-                # line continuation flag must retain its state.
-                pass
-            else:
+            if sourcecodeform != 'free':
                 # In fixed form, statement continuation is determined
                 # by a non-blank character at the 6-th position. Empty
                 # line indicates a start of a new statement
@@ -426,7 +418,7 @@ def readfortrancode(ffile, dowithline=show, istop=1):
 
             if (not cont or strictf77) and (len(l) > 5 and not l[5] == ' '):
                 # Continuation of a previous line
-                ll = ll + l[6:]
+                ll += l[6:]
                 finalline = ''
                 origfinalline = ''
             else:
@@ -436,26 +428,20 @@ def readfortrancode(ffile, dowithline=show, istop=1):
                     if r:
                         l = r.group('line')  # Continuation follows ..
                     if cont:
-                        ll = ll + cont2.match(l).group('line')
+                        ll += cont2.match(l).group('line')
                         finalline = ''
                         origfinalline = ''
                     else:
                         # clean up line beginning from possible digits.
                         l = '     ' + l[5:]
-                        if localdolowercase:
-                            finalline = ll.lower()
-                        else:
-                            finalline = ll
+                        finalline = ll.lower() if localdolowercase else ll
                         origfinalline = ll
                         ll = l
                     cont = (r is not None)
                 else:
                     # clean up line beginning from possible digits.
                     l = '     ' + l[5:]
-                    if localdolowercase:
-                        finalline = ll.lower()
-                    else:
-                        finalline = ll
+                    finalline = ll.lower() if localdolowercase else ll
                     origfinalline = ll
                     ll = l
 
@@ -480,10 +466,7 @@ def readfortrancode(ffile, dowithline=show, istop=1):
                 finalline = ''
                 origfinalline = ''
             else:
-                if localdolowercase:
-                    finalline = ll.lower()
-                else:
-                    finalline = ll
+                finalline = ll.lower() if localdolowercase else ll
                 origfinalline = ll
                 ll = l
             cont = (r is not None)
@@ -513,10 +496,7 @@ def readfortrancode(ffile, dowithline=show, istop=1):
         else:
             dowithline(finalline)
         l1 = ll
-    if localdolowercase:
-        finalline = ll.lower()
-    else:
-        finalline = ll
+    finalline = ll.lower() if localdolowercase else ll
     origfinalline = ll
     filepositiontext = 'Line #%d in %s:"%s"\n\t' % (
         fin.filelineno() - 1, currentfilename, l1)

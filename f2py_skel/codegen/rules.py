@@ -50,6 +50,7 @@ $Date: 2005/08/30 08:58:42 $
 Pearu Peterson
 
 """
+
 import os
 import time
 import copy
@@ -84,9 +85,7 @@ from f2py_skel.stds.f90 import f90mod_rules
 from f2py_skel.codegen import func2subr
 
 options = {}
-sepdict = {}
-#for k in ['need_cfuncs']: sepdict[k]=','
-for k in ['decl',
+sepdict = {k: '\n' for k in ['decl',
           'frompyobj',
           'cleanupfrompyobj',
           'topyarr', 'method',
@@ -100,9 +99,7 @@ for k in ['decl',
           'routine_defs', 'externroutines',
           'initf2pywraphooks',
           'commonhooks', 'initcommonhooks',
-          'f90modhooks', 'initf90modhooks']:
-    sepdict[k] = '\n'
-
+          'f90modhooks', 'initf90modhooks']}
 #################### Rules for C/API module #################
 
 generationtime = int(os.environ.get('SOURCE_DATE_EPOCH', time.time()))
@@ -1317,16 +1314,14 @@ def buildmodule(m, um):
                 'C     It contains Fortran 77 wrappers to fortran functions.\n')
             lines = []
             for l in ('\n\n'.join(funcwrappers) + '\n').split('\n'):
-                if 0 <= l.find('!') < 66:
-                    # don't split comment lines
-                    lines.append(l + '\n')
-                elif l and l[0] == ' ':
+                if not 0 <= l.find('!') < 66 and (
+                    0 <= l.find('!') < 66 or l and l[0] == ' '
+                ):
                     while len(l) >= 66:
                         lines.append(l[:66] + '\n     &')
                         l = l[66:]
-                    lines.append(l + '\n')
-                else:
-                    lines.append(l + '\n')
+                # don't split comment lines
+                lines.append(l + '\n')
             lines = ''.join(lines).replace('\n     &\n', '\n')
             f.write(lines)
         outmess('    Fortran 77 wrappers are saved to "%s"\n' % (wn))
@@ -1393,15 +1388,14 @@ def buildapi(rout):
             _rules = aux_rules
         else:
             _rules = arg_rules
-            if not isintent_hide(var[a]):
-                if not isoptional(var[a]):
-                    nth = nth + 1
-                    vrd['nth'] = repr(nth) + stnd[nth % 10] + ' argument'
-                else:
-                    nthk = nthk + 1
-                    vrd['nth'] = repr(nthk) + stnd[nthk % 10] + ' keyword'
-            else:
+            if isintent_hide(var[a]):
                 vrd['nth'] = 'hidden'
+            elif not isoptional(var[a]):
+                nth += 1
+                vrd['nth'] = repr(nth) + stnd[nth % 10] + ' argument'
+            else:
+                nthk += 1
+                vrd['nth'] = repr(nthk) + stnd[nthk % 10] + ' keyword'
         savevrd[a] = vrd
         for r in _rules:
             if '_depend' in r:
@@ -1412,10 +1406,7 @@ def buildapi(rout):
                 if '_break' in r:
                     break
     for a in depargs:
-        if isintent_aux(var[a]):
-            _rules = aux_rules
-        else:
-            _rules = arg_rules
+        _rules = aux_rules if isintent_aux(var[a]) else arg_rules
         vrd = savevrd[a]
         for r in _rules:
             if '_depend' not in r:
@@ -1468,12 +1459,14 @@ def buildapi(rout):
     rd['latexdocstrsigns'] = []
     for k in ['docstrreq', 'docstropt', 'docstrout', 'docstrcbs']:
         if k in rd and isinstance(rd[k], list):
-            rd['docstrsigns'] = rd['docstrsigns'] + rd[k]
+            rd['docstrsigns'] += rd[k]
         k = 'latex' + k
         if k in rd and isinstance(rd[k], list):
-            rd['latexdocstrsigns'] = rd['latexdocstrsigns'] + rd[k][0:1] +\
-                ['\\begin{description}'] + rd[k][1:] +\
-                ['\\end{description}']
+            rd['latexdocstrsigns'] = (
+                (rd['latexdocstrsigns'] + rd[k][:1] + ['\\begin{description}'])
+                + rd[k][1:]
+            ) + ['\\end{description}']
+
 
     ar = applyrules(routine_rules, rd)
     if ismoduleroutine(rout):

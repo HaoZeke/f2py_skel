@@ -244,10 +244,7 @@ def getctype(var):
     """
     ctype = 'void'
     if isfunction(var):
-        if 'result' in var:
-            a = var['result']
-        else:
-            a = var['name']
+        a = var['result'] if 'result' in var else var['name']
         if a in var['vars']:
             return getctype(var['vars'][a])
         else:
@@ -279,18 +276,14 @@ def getctype(var):
                         errmess('getctype: "%s(kind=%s)" is mapped to C "%s" (to override define dict(%s = dict(%s="<C typespec>")) in %s/.f2py_f2cmap file).\n'
                                 % (typespec, var['kindselector']['kind'], ctype,
                                    typespec, var['kindselector']['kind'], os.getcwd()))
-    else:
-        if not isexternal(var):
-            errmess('getctype: No C-type found in "%s", assuming void.\n' % var)
+    elif not isexternal(var):
+        errmess('getctype: No C-type found in "%s", assuming void.\n' % var)
     return ctype
 
 
 def getstrlength(var):
     if isstringfunction(var):
-        if 'result' in var:
-            a = var['result']
-        else:
-            a = var['name']
+        a = var['result'] if 'result' in var else var['name']
         if a in var['vars']:
             return getstrlength(var['vars'][a])
         else:
@@ -347,7 +340,7 @@ def getarrdims(a, var, verbose=0):
                     break
         ret['setdims'], i = '', -1
         for d in dim:
-            i = i + 1
+            i += 1
             if d not in ['*', ':', '(*)', '(:)']:
                 ret['setdims'] = '%s#varname#_Dims[%d]=%s,' % (
                     ret['setdims'], i, d)
@@ -355,7 +348,7 @@ def getarrdims(a, var, verbose=0):
             ret['setdims'] = ret['setdims'][:-1]
         ret['cbsetdims'], i = '', -1
         for d in var['dimension']:
-            i = i + 1
+            i += 1
             if d not in ['*', ':', '(*)', '(:)']:
                 ret['cbsetdims'] = '%s#varname#_Dims[%d]=%s,' % (
                     ret['cbsetdims'], i, d)
@@ -377,10 +370,7 @@ def getarrdims(a, var, verbose=0):
 def getpydocsign(a, var):
     global lcb_map
     if isfunction(var):
-        if 'result' in var:
-            af = var['result']
-        else:
-            af = var['name']
+        af = var['result'] if 'result' in var else var['name']
         if af in var['vars']:
             return getpydocsign(af, var['vars'][af])
         else:
@@ -436,10 +426,7 @@ def getpydocsign(a, var):
         ua = ''
         if a in lcb_map and lcb_map[a] in lcb2_map and 'argname' in lcb2_map[lcb_map[a]]:
             ua = lcb2_map[lcb_map[a]]['argname']
-            if not ua == a:
-                ua = ' => %s' % ua
-            else:
-                ua = ''
+            ua = ' => %s' % ua if ua != a else ''
         sig = '%s : call-back function%s' % (a, ua)
         sigout = sig
     else:
@@ -467,10 +454,7 @@ def getarrdocsign(a, var):
 
 
 def getinit(a, var):
-    if isstring(var):
-        init, showinit = '""', "''"
-    else:
-        init, showinit = '', ''
+    init, showinit = ('""', "''") if isstring(var) else ('', '')
     if hasinitvalue(var):
         init = var['=']
         showinit = init
@@ -516,15 +500,8 @@ def sign2map(a, var):
                 out_a = k[4:]
                 break
     ret = {'varname': a, 'outvarname': out_a, 'ctype': getctype(var)}
-    intent_flags = []
-    for f, s in isintent_dict.items():
-        if f(var):
-            intent_flags.append('F2PY_%s' % s)
-    if intent_flags:
-        # TODO: Evaluate intent_flags here.
-        ret['intent'] = '|'.join(intent_flags)
-    else:
-        ret['intent'] = 'F2PY_INTENT_IN'
+    intent_flags = ['F2PY_%s' % s for f, s in isintent_dict.items() if f(var)]
+    ret['intent'] = '|'.join(intent_flags) if intent_flags else 'F2PY_INTENT_IN'
     if isarray(var):
         ret['varrformat'] = 'N'
     elif ret['ctype'] in c2buildvalue_map:
@@ -569,10 +546,7 @@ def sign2map(a, var):
               isintent_callback, 'callback',
               isintent_aux, 'auxiliary',
               ]
-        rl = []
-        for i in range(0, len(il), 2):
-            if il[i](var):
-                rl.append(il[i + 1])
+        rl = [il[i + 1] for i in range(0, len(il), 2) if il[i](var)]
         if isstring(var):
             rl.append('slen(%s)=%s' % (a, ret['length']))
         if isarray(var):
@@ -585,10 +559,9 @@ def sign2map(a, var):
         else:
             ret['vardebuginfo'] = 'debug-capi:%s %s=%s:%s' % (
                 ret['ctype'], a, ret['showinit'], ','.join(rl))
-        if isscalar(var):
-            if ret['ctype'] in cformat_map:
-                ret['vardebugshowvalue'] = 'debug-capi:%s=%s' % (
-                    a, cformat_map[ret['ctype']])
+        if isscalar(var) and ret['ctype'] in cformat_map:
+            ret['vardebugshowvalue'] = 'debug-capi:%s=%s' % (
+                a, cformat_map[ret['ctype']])
         if isstring(var):
             ret['vardebugshowvalue'] = 'debug-capi:slen(%s)=%%d %s=\\"%%s\\"' % (
                 a, a)
