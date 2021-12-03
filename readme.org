@@ -14,9 +14,18 @@ after adjusting for file paths.
 ** Getting started
 
 #+begin_src bash
+poetry install # expects gfortran on the path
 poetry shell
+poetry run f2py
 pytest
 #+end_src
+
+Note that the actual command installed is ~f2py_skel~, however for convenience,
+a ~poetry~ target is provided.
+
+#+begin_quote
+Seriously *do not* ~pip install~ this
+#+end_quote
 
 ** To be implemented
 - [X] Tests
