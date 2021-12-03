@@ -6,7 +6,7 @@ from unittest.mock import patch
 import numpy as np
 from numpy.testing import assert_, assert_equal, IS_PYPY
 
-from . import util
+from .. import util
 from f2py_skel.frontend import main as f2pycli
 
 @pytest.fixture(scope="session")
