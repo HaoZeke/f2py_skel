@@ -15,8 +15,8 @@ from f2py_skel.frontend import main as f2pycli
 # CLI utils and classes #
 #########################
 
-PPaths = namedtuple("PPaths",
-                    "finp, f90inp, pyf, wrap77, wrap90, cmodf")
+PPaths = namedtuple("PPaths", "finp, f90inp, pyf, wrap77, wrap90, cmodf")
+
 
 def get_io_paths(fname_inp, mname="untitled"):
     """Takes in a temporary file for testing and returns the expected output and input paths
@@ -44,73 +44,76 @@ def get_io_paths(fname_inp, mname="untitled"):
     bpath = Path(fname_inp)
     bstem = bpath.stem
     foutl = PPaths(
-        finp = bpath.with_suffix(".f"),
-        f90inp = bpath.with_suffix(".f90"),
-        pyf = bpath.with_suffix(".pyf"),
-        wrap77 = bpath.with_name(f"{mname}-f2pywrappers.f"),
-        wrap90 = bpath.with_name(f"{mname}-f2pywrappers2.f90"),
-        cmodf = bpath.with_name(f"{mname}module.c")
+        finp=bpath.with_suffix(".f"),
+        f90inp=bpath.with_suffix(".f90"),
+        pyf=bpath.with_suffix(".pyf"),
+        wrap77=bpath.with_name(f"{mname}-f2pywrappers.f"),
+        wrap90=bpath.with_name(f"{mname}-f2pywrappers2.f90"),
+        cmodf=bpath.with_name(f"{mname}module.c"),
     )
     return foutl
+
 
 ##########################
 # CLI Fixtures and Tests #
 ##########################
 
+
 @pytest.fixture(scope="session")
 def hello_world_f90(tmpdir_factory):
-    """Generates a single f90 file for testing
-    """
-    fdat = textwrap.dedent("""
+    """Generates a single f90 file for testing"""
+    fdat = textwrap.dedent(
+        """
     function hi
       print*, "Hello World"
     end function
-    """)
+    """
+    )
     fn = tmpdir_factory.getbasetemp() / "hello.f90"
     fn.write_text(fdat, encoding="ascii")
     return fn
 
+
 def test_gen_pyf(capfd, hello_world_f90, monkeypatch):
-    """Ensures that a signature file is generated via the CLI
-    """
+    """Ensures that a signature file is generated via the CLI"""
     ipath = Path(hello_world_f90)
     opath = Path(hello_world_f90).stem + ".pyf"
-    monkeypatch.setattr("sys.argv", ["pytest", # doesn't get passed
-                                     "-h", # Create a signature file
-                                     str(opath),
-                                     str(ipath)])
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "pytest",  # doesn't get passed
+            "-h",  # Create a signature file
+            str(opath),
+            str(ipath),
+        ],
+    )
 
     with util.switchdir(ipath.parent):
-        f2pycli() # Generate wrappers
+        f2pycli()  # Generate wrappers
         out, _ = capfd.readouterr()
         assert "Saving signatures to file" in out
         assert Path(f"{str(opath)}").exists()
 
+
 def test_gen_pyf_no_overwrite(capfd, hello_world_f90, monkeypatch):
-    """Ensures that the CLI refuses to overwrite signature files
-    """
+    """Ensures that the CLI refuses to overwrite signature files"""
     ipath = Path(hello_world_f90)
-    monkeypatch.setattr("sys.argv", ["pytest",
-                                     "-h",
-                                     "faker.pyf",
-                                     str(ipath)])
+    monkeypatch.setattr("sys.argv", ["pytest", "-h", "faker.pyf", str(ipath)])
 
     with util.switchdir(ipath.parent):
         Path("faker.pyf").write_text("Fake news", encoding="ascii")
         with pytest.raises(SystemExit):
-            f2pycli() # Refuse to overwrite
+            f2pycli()  # Refuse to overwrite
     _, err = capfd.readouterr()
     assert "Use --overwrite-signature to overwrite" in err
+
 
 def test_mod_gen_f77(capfd, hello_world_f90, monkeypatch):
     """Checks the generation of files based on a module name"""
     MNAME = "hi"
     foutl = get_io_paths(hello_world_f90, mname=MNAME)
     ipath = foutl.f90inp
-    monkeypatch.setattr("sys.argv", ["pytest",
-                                     str(ipath),
-                                     "-m",
-                                     MNAME])
+    monkeypatch.setattr("sys.argv", ["pytest", str(ipath), "-m", MNAME])
     with util.switchdir(ipath.parent):
         f2pycli()
 
