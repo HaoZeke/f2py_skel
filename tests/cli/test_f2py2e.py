@@ -1,4 +1,4 @@
-import textwrap, re
+import textwrap, re, sys
 from pathlib import Path
 from unittest.mock import patch
 from collections import namedtuple
@@ -82,7 +82,8 @@ def test_gen_pyf(capfd, hello_world_f90, monkeypatch):
     ipath = Path(hello_world_f90)
     opath = Path(hello_world_f90).stem + ".pyf"
     monkeypatch.setattr(
-        "sys.argv",
+        sys,
+        "argv",
         [
             "pytest",  # doesn't get passed
             "-h",  # Create a signature file
@@ -101,7 +102,7 @@ def test_gen_pyf(capfd, hello_world_f90, monkeypatch):
 def test_gen_pyf_no_overwrite(capfd, hello_world_f90, monkeypatch):
     """Ensures that the CLI refuses to overwrite signature files"""
     ipath = Path(hello_world_f90)
-    monkeypatch.setattr("sys.argv", ["pytest", "-h", "faker.pyf", str(ipath)])
+    monkeypatch.setattr(sys, "argv", f"f2py -h faker.pyf {str(ipath)}".split())
 
     with util.switchdir(ipath.parent):
         Path("faker.pyf").write_text("Fake news", encoding="ascii")
@@ -116,7 +117,7 @@ def test_mod_gen_f77(capfd, hello_world_f90, monkeypatch):
     MNAME = "hi"
     foutl = get_io_paths(hello_world_f90, mname=MNAME)
     ipath = foutl.f90inp
-    monkeypatch.setattr("sys.argv", ["pytest", str(ipath), "-m", MNAME])
+    monkeypatch.setattr(sys, "argv", f"f2py {str(ipath)} -m {MNAME}".split())
     with util.switchdir(ipath.parent):
         f2pycli()
 
@@ -133,13 +134,13 @@ def test_lower_cmod(capfd, hello_world_f77, monkeypatch):
     capshi = re.compile(r"HI\(\)")
     capslo = re.compile(r"hi\(\)")
     # Case I: --lower is passed
-    monkeypatch.setattr("sys.argv", ["pytest", str(ipath), "--lower", "-m", "test"])
+    monkeypatch.setattr(sys, "argv", f"f2py {str(ipath)} -m test --lower".split())
     with util.switchdir(ipath.parent):
         f2pycli()
         assert capslo.search(foutl.cmodf.read_text()) is not None
         assert capshi.search(foutl.cmodf.read_text()) is None
     # Case II: --no-lower is passed
-    monkeypatch.setattr("sys.argv", ["pytest", str(ipath), "--no-lower", "-m", "test"])
+    monkeypatch.setattr(sys, "argv", f"f2py {str(ipath)} -m test --no-lower".split())
     with util.switchdir(ipath.parent):
         f2pycli()
         assert capslo.search(foutl.cmodf.read_text()) is None
@@ -156,16 +157,9 @@ def test_lower_sig(capfd, hello_world_f77, monkeypatch):
     # Case I: --lower is implied by -h
     # TODO: Clean up to prevent passing --overwrite-signature
     monkeypatch.setattr(
-        "sys.argv",
-        [
-            "pytest",
-            str(ipath),
-            "-h",
-            str(foutl.pyf),
-            "-m",
-            "test",
-            "--overwrite-signature",
-        ],
+        sys,
+        "argv",
+        f"f2py {str(ipath)} -h {str(foutl.pyf)} -m test --overwrite-signature".split(),
     )
     with util.switchdir(ipath.parent):
         f2pycli()
@@ -174,17 +168,9 @@ def test_lower_sig(capfd, hello_world_f77, monkeypatch):
 
     # Case II: --no-lower overrides -h
     monkeypatch.setattr(
-        "sys.argv",
-        [
-            "pytest",
-            str(ipath),
-            "-h",
-            str(foutl.pyf),
-            "-m",
-            "test",
-            "--no-lower",
-            "--overwrite-signature",
-        ],
+        sys,
+        "argv",
+        f"f2py {str(ipath)} -h {str(foutl.pyf)} -m test --overwrite-signature --no-lower".split(),
     )
     with util.switchdir(ipath.parent):
         f2pycli()
