@@ -46,8 +46,7 @@ def flags_info(arr):
 
 
 def flags2names(flags):
-    info = []
-    for flagname in [
+    return [flagname for flagname in [
         "CONTIGUOUS",
         "FORTRAN",
         "OWNDATA",
@@ -62,10 +61,7 @@ def flags2names(flags):
         "BEHAVED_RO",
         "CARRAY",
         "FARRAY",
-    ]:
-        if abs(flags) & getattr(wrap, flagname, 0):
-            info.append(flagname)
-    return info
+    ] if abs(flags) & getattr(wrap, flagname, 0)]
 
 
 class Intent:
@@ -92,10 +88,7 @@ class Intent:
         return "Intent(%r)" % (self.intent_list)
 
     def is_intent(self, *names):
-        for name in names:
-            if name not in self.intent_list:
-                return False
-        return True
+        return all(name in self.intent_list for name in names)
 
     def is_intent_exact(self, *names):
         return len(self.intent_list) == len(names) and self.is_intent(*names)
@@ -204,11 +197,7 @@ class Type:
 
     def smaller_types(self):
         bits = typeinfo[self.NAME].alignment
-        types = []
-        for name in _type_names:
-            if typeinfo[name].alignment < bits:
-                types.append(Type(name))
-        return types
+        return [Type(name) for name in _type_names if typeinfo[name].alignment < bits]
 
     def equal_types(self):
         bits = typeinfo[self.NAME].alignment
@@ -222,11 +211,7 @@ class Type:
 
     def larger_types(self):
         bits = typeinfo[self.NAME].alignment
-        types = []
-        for name in _type_names:
-            if typeinfo[name].alignment > bits:
-                types.append(Type(name))
-        return types
+        return [Type(name) for name in _type_names if typeinfo[name].alignment > bits]
 
 
 class Array:
@@ -330,10 +315,13 @@ class Array:
             )
         assert_(self.arr_equal(self.pyarr, self.arr))
 
-        if isinstance(self.obj, np.ndarray):
-            if typ.elsize == Type(obj.dtype).elsize:
-                if not intent.is_intent("copy") and self.arr_attr[1] <= 1:
-                    assert_(self.has_shared_memory())
+        if (
+            isinstance(self.obj, np.ndarray)
+            and typ.elsize == Type(obj.dtype).elsize
+            and not intent.is_intent("copy")
+            and self.arr_attr[1] <= 1
+        ):
+            assert_(self.has_shared_memory())
 
     def arr_equal(self, arr1, arr2):
         if arr1.shape != arr2.shape:
