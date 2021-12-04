@@ -5,11 +5,12 @@ from f2py_skel.frontend import crackfortran
 
 
 class TestAbstractInterface(util.F2PyTest):
-    suffix = '.f90'
+    suffix = ".f90"
 
-    skip = ['add1', 'add2']
+    skip = ["add1", "add2"]
 
-    code = textwrap.dedent("""
+    code = textwrap.dedent(
+        """
         module ops_module
 
           abstract interface
@@ -44,7 +45,8 @@ class TestAbstractInterface(util.F2PyTest):
           integer, intent(out) :: z
           z = x + 2 * y
         end subroutine
-        """)
+        """
+    )
 
     def test_abstract_interface(self):
         assert self.module.ops_module.foo(3, 5) == (8, 13)
@@ -52,15 +54,19 @@ class TestAbstractInterface(util.F2PyTest):
     def test_parse_abstract_interface(self, tmp_path):
         # Test gh18403
         f_path = Path(tmp_path / "gh18403_mod.f90")
-        f_path.write_text(textwrap.dedent("""\
+        f_path.write_text(
+            textwrap.dedent(
+                """\
             module test
               abstract interface
                 subroutine foo()
                 end subroutine
               end interface
             end module test
-            """))
+            """
+            )
+        )
         mod = crackfortran.crackfortran([str(f_path)])
         assert len(mod) == 1
-        assert len(mod[0]['body']) == 1
-        assert mod[0]['body'][0]['block'] == 'abstract interface'
+        assert len(mod[0]["body"]) == 1
+        assert mod[0]["body"][0]["block"] == "abstract interface"
