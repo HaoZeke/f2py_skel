@@ -1,4 +1,4 @@
-import textwrap
+import textwrap, re
 from pathlib import Path
 from unittest.mock import patch
 from collections import namedtuple
@@ -62,14 +62,17 @@ def get_io_paths(fname_inp, mname="untitled"):
 @pytest.fixture(scope="session")
 def hello_world_f90(tmpdir_factory):
     """Generates a single f90 file for testing"""
-    fdat = textwrap.dedent(
-        """
-    function hi
-      print*, "Hello World"
-    end function
-    """
-    )
+    fdat = util.getpath("tests", "src", "cli", "hiworld.f90").read_text()
     fn = tmpdir_factory.getbasetemp() / "hello.f90"
+    fn.write_text(fdat, encoding="ascii")
+    return fn
+
+
+@pytest.fixture(scope="session")
+def hello_world_f77(tmpdir_factory):
+    """Generates a single f77 file for testing"""
+    fdat = util.getpath("tests", "src", "cli", "hi77.f").read_text()
+    fn = tmpdir_factory.getbasetemp() / "hello.f"
     fn.write_text(fdat, encoding="ascii")
     return fn
 
@@ -121,3 +124,69 @@ def test_mod_gen_f77(capfd, hello_world_f90, monkeypatch):
     assert Path.exists(foutl.cmodf)
     # File contains a function, check for F77 wrappers
     assert Path.exists(foutl.wrap77)
+
+
+def test_lower_cmod(capfd, hello_world_f77, monkeypatch):
+    """Lowers cases by flag or when -h is present"""
+    foutl = get_io_paths(hello_world_f77, mname="test")
+    ipath = foutl.finp
+    capshi = re.compile(r"HI\(\)")
+    capslo = re.compile(r"hi\(\)")
+    # Case I: --lower is passed
+    monkeypatch.setattr("sys.argv", ["pytest", str(ipath), "--lower", "-m", "test"])
+    with util.switchdir(ipath.parent):
+        f2pycli()
+        assert capslo.search(foutl.cmodf.read_text()) is not None
+        assert capshi.search(foutl.cmodf.read_text()) is None
+    # Case II: --no-lower is passed
+    monkeypatch.setattr("sys.argv", ["pytest", str(ipath), "--no-lower", "-m", "test"])
+    with util.switchdir(ipath.parent):
+        f2pycli()
+        assert capslo.search(foutl.cmodf.read_text()) is None
+        assert capshi.search(foutl.cmodf.read_text()) is not None
+
+
+def test_lower_sig(capfd, hello_world_f77, monkeypatch):
+    """Lowers cases in signature files by flag or when -h is present"""
+    foutl = get_io_paths(hello_world_f77, mname="test")
+    ipath = foutl.finp
+    # Signature files
+    capshi = re.compile(r"subroutine HI")
+    capslo = re.compile(r"subroutine hi")
+    # Case I: --lower is implied by -h
+    # TODO: Clean up to prevent passing --overwrite-signature
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "pytest",
+            str(ipath),
+            "-h",
+            str(foutl.pyf),
+            "-m",
+            "test",
+            "--overwrite-signature",
+        ],
+    )
+    with util.switchdir(ipath.parent):
+        f2pycli()
+        assert capslo.search(foutl.pyf.read_text()) is not None
+        assert capshi.search(foutl.pyf.read_text()) is None
+
+    # Case II: --no-lower overrides -h
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "pytest",
+            str(ipath),
+            "-h",
+            str(foutl.pyf),
+            "-m",
+            "test",
+            "--no-lower",
+            "--overwrite-signature",
+        ],
+    )
+    with util.switchdir(ipath.parent):
+        f2pycli()
+        assert capslo.search(foutl.pyf.read_text()) is None
+        assert capshi.search(foutl.pyf.read_text()) is not None
