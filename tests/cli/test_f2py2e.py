@@ -188,7 +188,7 @@ def test_lower_sig(capfd, hello_world_f77, monkeypatch):
         assert capshi.search(foutl.pyf.read_text()) is not None
 
 
-def test_skip(capfd, retreal_f77, monkeypatch):
+def test_f2py_skip(capfd, retreal_f77, monkeypatch):
     """Tests that functions are skipped with skip:"""
     foutl = get_io_paths(retreal_f77, mname="test")
     ipath = foutl.finp
@@ -211,8 +211,24 @@ def test_skip(capfd, retreal_f77, monkeypatch):
         assert f'Constructing wrapper function "{rkey}"' in out
 
 
-def test_only(capfd, retreal_f77, monkeypatch):
-    """Test that functions can be kept by only: and by speficying <fortran functions>"""
-    # Case I: Listed in only:
-    # Case II: Enumerated on the command line
-    pass
+def test_f2py_only(capfd, retreal_f77, monkeypatch):
+    """Test that functions can be kept by only:"""
+    foutl = get_io_paths(retreal_f77, mname="test")
+    ipath = foutl.finp
+    toskip = "t0 t4 t8 sd s8 s4"
+    tokeep = "td s0"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        f"f2py {str(ipath)} {str(foutl.pyf)} -m test only: {tokeep}".split(),
+    )
+    with util.switchdir(ipath.parent):
+        f2pycli()
+    out, err = capfd.readouterr()
+    for skey in toskip.split():
+        assert (
+            f'buildmodule: Could not found the body of interfaced routine "{skey}". Skipping.'
+            in err
+        )
+    for rkey in tokeep.split():
+        assert f'Constructing wrapper function "{rkey}"' in out
