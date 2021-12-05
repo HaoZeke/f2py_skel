@@ -1,4 +1,5 @@
-* About
+* About [[https://codecov.io/gh/HaoZeke/f2py_skel][file:https://codecov.io/gh/HaoZeke/f2py_skel/branch/main/graph/badge.svg?token=A4UN4ESLYY]]
+
 This is a skeletal version of ~f2py~. Essentially it is stripped out of ~numpy~. Uses ~poetry~, and ~cocogitto~ for enforcing ~numpy~ guidelines for commits.
 
 #+begin_quote
@@ -50,5 +51,10 @@ Seriously *do not* ~pip install~ this
 - Show an example of do concurrent from Python
   + A simple fortran program with these features which can be shown to work as fast from Python
   + Compare to the C implementation
+** Tests
+- Every test is either named after an issue ~ghBLAH~ or generically called ~foo~
+- ~code~ and ~suffix~ are essentially deprecated, and ~sources~ with the path helper are preferred
+- Some tests can work with either ~.f~ or ~.f90~, and should be optionally marked
+- ~.pyf~ files are still handled the old way
 * License
 MIT
