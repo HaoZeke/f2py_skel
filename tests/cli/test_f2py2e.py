@@ -77,6 +77,15 @@ def hello_world_f77(tmpdir_factory):
     return fn
 
 
+@pytest.fixture(scope="session")
+def retreal_f77(tmpdir_factory):
+    """Generates a single f77 file for testing"""
+    fdat = util.getpath("tests", "src", "return_real", "foo77.f").read_text()
+    fn = tmpdir_factory.getbasetemp() / "foo.f"
+    fn.write_text(fdat, encoding="ascii")
+    return fn
+
+
 def test_gen_pyf(capfd, hello_world_f90, monkeypatch):
     """Ensures that a signature file is generated via the CLI"""
     ipath = Path(hello_world_f90)
@@ -156,6 +165,7 @@ def test_lower_sig(capfd, hello_world_f77, monkeypatch):
     capslo = re.compile(r"subroutine hi")
     # Case I: --lower is implied by -h
     # TODO: Clean up to prevent passing --overwrite-signature
+    # TODO: Check stderr and stdout like skip
     monkeypatch.setattr(
         sys,
         "argv",
@@ -176,3 +186,33 @@ def test_lower_sig(capfd, hello_world_f77, monkeypatch):
         f2pycli()
         assert capslo.search(foutl.pyf.read_text()) is None
         assert capshi.search(foutl.pyf.read_text()) is not None
+
+
+def test_skip(capfd, retreal_f77, monkeypatch):
+    """Tests that functions are skipped with skip:"""
+    foutl = get_io_paths(retreal_f77, mname="test")
+    ipath = foutl.finp
+    toskip = "t0 t4 t8 sd s8 s4"
+    remaining = "td s0"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        f"f2py {str(ipath)} {str(foutl.pyf)} -m test skip: {toskip}".split(),
+    )
+    with util.switchdir(ipath.parent):
+        f2pycli()
+    out, err = capfd.readouterr()
+    for skey in toskip.split():
+        assert (
+            f'buildmodule: Could not found the body of interfaced routine "{skey}". Skipping.'
+            in err
+        )
+    for rkey in remaining.split():
+        assert f'Constructing wrapper function "{rkey}"' in out
+
+
+def test_only(capfd, retreal_f77, monkeypatch):
+    """Test that functions can be kept by only: and by speficying <fortran functions>"""
+    # Case I: Listed in only:
+    # Case II: Enumerated on the command line
+    pass
