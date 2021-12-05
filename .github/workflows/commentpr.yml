@@ -33,6 +33,9 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-poetry-
 
+    - name: Install deps
+      run: poetry install
+
     - name: Build coverage file
       run: |
           poetry run pytest --cache-clear --cov=f2py_skel tests/ > pytest-coverage.txt
