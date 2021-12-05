@@ -32,3 +32,10 @@ jobs:
 
     - name: Comment coverage
       uses: coroo/pytest-coverage-commentator@v1.0.2
+
+    - uses: actions/cache@v2
+      with:
+        path: ~/.cache/pypoetry
+        key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-poetry-
