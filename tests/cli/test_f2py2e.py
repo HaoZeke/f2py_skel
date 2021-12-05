@@ -90,16 +90,8 @@ def test_gen_pyf(capfd, hello_world_f90, monkeypatch):
     """Ensures that a signature file is generated via the CLI"""
     ipath = Path(hello_world_f90)
     opath = Path(hello_world_f90).stem + ".pyf"
-    monkeypatch.setattr(
-        sys,
-        "argv",
-        [
-            "pytest",  # doesn't get passed
-            "-h",  # Create a signature file
-            str(opath),
-            str(ipath),
-        ],
-    )
+    monkeypatch.setattr(sys, "argv",
+                        f"f2py -h {str(opath)} {str(ipath)}".split())
 
     with util.switchdir(ipath.parent):
         f2pycli()  # Generate wrappers
@@ -143,17 +135,21 @@ def test_lower_cmod(capfd, hello_world_f77, monkeypatch):
     capshi = re.compile(r"HI\(\)")
     capslo = re.compile(r"hi\(\)")
     # Case I: --lower is passed
-    monkeypatch.setattr(sys, "argv", f"f2py {str(ipath)} -m test --lower".split())
+    monkeypatch.setattr(sys, "argv",
+                        f"f2py {str(ipath)} -m test --lower".split())
     with util.switchdir(ipath.parent):
         f2pycli()
-        assert capslo.search(foutl.cmodf.read_text()) is not None
-        assert capshi.search(foutl.cmodf.read_text()) is None
+        out, _ = capfd.readouterr()
+        assert capslo.search(out) is not None
+        assert capshi.search(out) is None
     # Case II: --no-lower is passed
-    monkeypatch.setattr(sys, "argv", f"f2py {str(ipath)} -m test --no-lower".split())
+    monkeypatch.setattr(sys, "argv",
+                        f"f2py {str(ipath)} -m test --no-lower".split())
     with util.switchdir(ipath.parent):
         f2pycli()
-        assert capslo.search(foutl.cmodf.read_text()) is None
-        assert capshi.search(foutl.cmodf.read_text()) is not None
+        out, _ = capfd.readouterr()
+        assert capslo.search(out) is None
+        assert capshi.search(out) is not None
 
 
 def test_lower_sig(capfd, hello_world_f77, monkeypatch):
@@ -161,31 +157,34 @@ def test_lower_sig(capfd, hello_world_f77, monkeypatch):
     foutl = get_io_paths(hello_world_f77, mname="test")
     ipath = foutl.finp
     # Signature files
-    capshi = re.compile(r"subroutine HI")
-    capslo = re.compile(r"subroutine hi")
+    capshi = re.compile(r"Block: HI")
+    capslo = re.compile(r"Block: hi")
     # Case I: --lower is implied by -h
     # TODO: Clean up to prevent passing --overwrite-signature
-    # TODO: Check stderr and stdout like skip
     monkeypatch.setattr(
         sys,
         "argv",
-        f"f2py {str(ipath)} -h {str(foutl.pyf)} -m test --overwrite-signature".split(),
+        f"f2py {str(ipath)} -h {str(foutl.pyf)} -m test --overwrite-signature".
+        split(),
     )
     with util.switchdir(ipath.parent):
         f2pycli()
-        assert capslo.search(foutl.pyf.read_text()) is not None
-        assert capshi.search(foutl.pyf.read_text()) is None
+        out, _ = capfd.readouterr()
+        assert capslo.search(out) is not None
+        assert capshi.search(out) is None
 
     # Case II: --no-lower overrides -h
     monkeypatch.setattr(
         sys,
         "argv",
-        f"f2py {str(ipath)} -h {str(foutl.pyf)} -m test --overwrite-signature --no-lower".split(),
+        f"f2py {str(ipath)} -h {str(foutl.pyf)} -m test --overwrite-signature --no-lower"
+        .split(),
     )
     with util.switchdir(ipath.parent):
         f2pycli()
-        assert capslo.search(foutl.pyf.read_text()) is None
-        assert capshi.search(foutl.pyf.read_text()) is not None
+        out, _ = capfd.readouterr()
+        assert capslo.search(out) is None
+        assert capshi.search(out) is not None
 
 
 def test_f2py_skip(capfd, retreal_f77, monkeypatch):
@@ -205,8 +204,7 @@ def test_f2py_skip(capfd, retreal_f77, monkeypatch):
     for skey in toskip.split():
         assert (
             f'buildmodule: Could not found the body of interfaced routine "{skey}". Skipping.'
-            in err
-        )
+            in err)
     for rkey in remaining.split():
         assert f'Constructing wrapper function "{rkey}"' in out
 
@@ -228,7 +226,6 @@ def test_f2py_only(capfd, retreal_f77, monkeypatch):
     for skey in toskip.split():
         assert (
             f'buildmodule: Could not found the body of interfaced routine "{skey}". Skipping.'
-            in err
-        )
+            in err)
     for rkey in tokeep.split():
         assert f'Constructing wrapper function "{rkey}"' in out
