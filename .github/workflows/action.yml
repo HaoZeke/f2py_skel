@@ -41,10 +41,7 @@ jobs:
       - name: Install deps
         run: poetry install
 
-      - name: Test
-        run: poetry run pytest
-
-      - name: Generate coverage report
+      - name: Generate coverage report and test
         run: |
           poetry run pytest --cov=./ --cov-report=xml
 
