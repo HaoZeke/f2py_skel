@@ -26,16 +26,16 @@ jobs:
       with:
         poetry-version: "1.1.12"
 
-    - name: Build coverage file
-      run: |
-          poetry run pytest --cache-clear --cov=f2py_skel tests/ > pytest-coverage.txt
-
-    - name: Comment coverage
-      uses: coroo/pytest-coverage-commentator@v1.0.2
-
     - uses: actions/cache@v2
       with:
         path: ~/.cache/pypoetry
         key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
         restore-keys: |
           ${{ runner.os }}-poetry-
+
+    - name: Build coverage file
+      run: |
+          poetry run pytest --cache-clear --cov=f2py_skel tests/ > pytest-coverage.txt
+
+    - name: Comment coverage
+      uses: coroo/pytest-coverage-commentator@v1.0.2

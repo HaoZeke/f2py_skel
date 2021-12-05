@@ -31,6 +31,13 @@ jobs:
         with:
           poetry-version: ${{ matrix.poetry-version }}
 
+      - uses: actions/cache@v2
+        with:
+          path: ~/.cache/pypoetry
+          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-
+
       - name: Install deps
         run: poetry install
 
@@ -49,10 +56,3 @@ jobs:
           flags: unittests
           name: codecov-umbrella
           verbose: true
-
-      - uses: actions/cache@v2
-        with:
-          path: ~/.cache/pypoetry
-          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-poetry-
