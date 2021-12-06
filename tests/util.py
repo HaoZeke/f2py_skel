@@ -99,8 +99,7 @@ def build_module(source_files, options=[], skip=[], only=[], module_name=None):
     """
 
     code = "import sys; sys.path = %s; import f2py_skel; " "f2py_skel.main()" % repr(
-        sys.path
-    )
+        sys.path)
 
     d = get_module_dir()
 
@@ -132,10 +131,13 @@ def build_module(source_files, options=[], skip=[], only=[], module_name=None):
     try:
         os.chdir(d)
         cmd = [sys.executable, "-c", code] + f2py_opts
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        p = subprocess.Popen(cmd,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT)
         out, err = p.communicate()
         if p.returncode != 0:
-            raise RuntimeError("Running f2py failed: %s\n%s" % (cmd[4:], asstr(out)))
+            raise RuntimeError("Running f2py failed: %s\n%s" %
+                               (cmd[4:], asstr(out)))
     finally:
         os.chdir(cwd)
 
@@ -148,9 +150,12 @@ def build_module(source_files, options=[], skip=[], only=[], module_name=None):
 
 
 @_memoize
-def build_code(
-    source_code, options=[], skip=[], only=[], suffix=None, module_name=None
-):
+def build_code(source_code,
+               options=[],
+               skip=[],
+               only=[],
+               suffix=None,
+               module_name=None):
     """
     Compile and import Fortran code using f2py.
 
@@ -160,9 +165,11 @@ def build_code(
     with temppath(suffix=suffix) as path:
         with open(path, "w") as f:
             f.write(source_code)
-        return build_module(
-            [path], options=options, skip=skip, only=only, module_name=module_name
-        )
+        return build_module([path],
+                            options=options,
+                            skip=skip,
+                            only=only,
+                            module_name=module_name)
 
 
 #
@@ -181,8 +188,7 @@ def _get_compiler_status():
 
     # XXX: this is really ugly. But I don't know how to invoke Distutils
     #      in a safer way...
-    code = textwrap.dedent(
-        """\
+    code = textwrap.dedent("""\
         import os
         import sys
         sys.path = %(syspath)s
@@ -202,8 +208,7 @@ def _get_compiler_status():
                                           config.have_f77c(),
                                           config.have_f90c()))
         sys.exit(99)
-        """
-    )
+        """)
     code = code % dict(syspath=repr(sys.path))
 
     tmpdir = tempfile.mkdtemp()
@@ -214,9 +219,10 @@ def _get_compiler_status():
             f.write(code)
 
         cmd = [sys.executable, "setup.py", "config"]
-        p = subprocess.Popen(
-            cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=tmpdir
-        )
+        p = subprocess.Popen(cmd,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT,
+                             cwd=tmpdir)
         out, err = p.communicate()
     finally:
         shutil.rmtree(tmpdir)
@@ -269,9 +275,7 @@ def build_module_distutils(source_files, config_code, module_name, **kw):
     # Build script
     config_code = textwrap.dedent(config_code).replace("\n", "\n    ")
 
-    code = (
-        textwrap.dedent(
-            """\
+    code = (textwrap.dedent("""\
         import os
         import sys
         sys.path = %(syspath)s
@@ -285,10 +289,7 @@ def build_module_distutils(source_files, config_code, module_name, **kw):
         if __name__ == "__main__":
             from numpy.distutils.core import setup
             setup(configuration=configuration)
-        """
-        )
-        % dict(config_code=config_code, syspath=repr(sys.path))
-    )
+        """) % dict(config_code=config_code, syspath=repr(sys.path)))
 
     script = os.path.join(d, get_temp_module_name() + ".py")
     dst_sources.append(script)
@@ -300,12 +301,13 @@ def build_module_distutils(source_files, config_code, module_name, **kw):
     try:
         os.chdir(d)
         cmd = [sys.executable, script, "build_ext", "-i"]
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        p = subprocess.Popen(cmd,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT)
         out, err = p.communicate()
         if p.returncode != 0:
-            raise RuntimeError(
-                "Running distutils build failed: %s\n%s" % (cmd[4:], asstr(out))
-            )
+            raise RuntimeError("Running distutils build failed: %s\n%s" %
+                               (cmd[4:], asstr(out)))
     finally:
         os.chdir(cwd)
 

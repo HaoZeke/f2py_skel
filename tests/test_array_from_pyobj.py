@@ -35,9 +35,8 @@ def setup_module():
             util.getpath("f2py_skel", "csrcs", "fortranobject.c"),
             util.getpath("f2py_skel", "csrcs", "fortranobject.h"),
         ]
-        wrap = util.build_module_distutils(
-            src, config_code, "test_array_from_pyobj_ext"
-        )
+        wrap = util.build_module_distutils(src, config_code,
+                                           "test_array_from_pyobj_ext")
 
 
 def flags_info(arr):
@@ -48,20 +47,20 @@ def flags_info(arr):
 def flags2names(flags):
     info = []
     for flagname in [
-        "CONTIGUOUS",
-        "FORTRAN",
-        "OWNDATA",
-        "ENSURECOPY",
-        "ENSUREARRAY",
-        "ALIGNED",
-        "NOTSWAPPED",
-        "WRITEABLE",
-        "WRITEBACKIFCOPY",
-        "UPDATEIFCOPY",
-        "BEHAVED",
-        "BEHAVED_RO",
-        "CARRAY",
-        "FARRAY",
+            "CONTIGUOUS",
+            "FORTRAN",
+            "OWNDATA",
+            "ENSURECOPY",
+            "ENSUREARRAY",
+            "ALIGNED",
+            "NOTSWAPPED",
+            "WRITEABLE",
+            "WRITEBACKIFCOPY",
+            "UPDATEIFCOPY",
+            "BEHAVED",
+            "BEHAVED_RO",
+            "CARRAY",
+            "FARRAY",
     ]:
         if abs(flags) & getattr(wrap, flagname, 0):
             info.append(flagname)
@@ -147,11 +146,9 @@ _cast_dict["CFLOAT"] = _cast_dict["FLOAT"] + ["CFLOAT"]
 # when numpy gains an aligned allocator the tests could be enabled again
 #
 # Furthermore, on macOS ARM64, LONGDOUBLE is an alias for DOUBLE.
-if (
-    (np.intp().dtype.itemsize != 4 or np.clongdouble().dtype.alignment <= 8)
-    and sys.platform != "win32"
-    and (platform.system(), platform.processor()) != ("Darwin", "arm")
-):
+if ((np.intp().dtype.itemsize != 4 or np.clongdouble().dtype.alignment <= 8)
+        and sys.platform != "win32"
+        and (platform.system(), platform.processor()) != ("Darwin", "arm")):
     _type_names.extend(["LONGDOUBLE", "CDOUBLE", "CLONGDOUBLE"])
     _cast_dict["LONGDOUBLE"] = _cast_dict["LONG"] + [
         "ULONG",
@@ -292,14 +289,12 @@ class Array:
         if self.arr_attr[1] <= 1:
             assert_(
                 self.arr_attr[3] == self.pyarr_attr[3],
-                repr(
-                    (
-                        self.arr_attr[3],
-                        self.pyarr_attr[3],
-                        self.arr.tobytes(),
-                        self.pyarr.tobytes(),
-                    )
-                ),
+                repr((
+                    self.arr_attr[3],
+                    self.pyarr_attr[3],
+                    self.arr.tobytes(),
+                    self.pyarr.tobytes(),
+                )),
             )  # strides
         assert_(
             self.arr_attr[5][-2:] == self.pyarr_attr[5][-2:],
@@ -307,15 +302,13 @@ class Array:
         )  # descr
         assert_(
             self.arr_attr[6] == self.pyarr_attr[6],
-            repr(
-                (
-                    self.arr_attr[6],
-                    self.pyarr_attr[6],
-                    flags2names(0 * self.arr_attr[6] - self.pyarr_attr[6]),
-                    flags2names(self.arr_attr[6]),
-                    intent,
-                )
-            ),
+            repr((
+                self.arr_attr[6],
+                self.pyarr_attr[6],
+                flags2names(0 * self.arr_attr[6] - self.pyarr_attr[6]),
+                flags2names(self.arr_attr[6]),
+                intent,
+            )),
         )  # flags
 
         if intent.is_intent("cache"):
@@ -371,8 +364,7 @@ class TestSharedMemory:
     def setup_type(self, request):
         request.cls.type = Type(request.param)
         request.cls.array = lambda self, dims, intent, obj: Array(
-            Type(request.param), dims, intent, obj
-        )
+            Type(request.param), dims, intent, obj)
 
     def test_in_from_2seq(self):
         a = self.array([2], intent.in_, self.num2seq)
@@ -383,7 +375,8 @@ class TestSharedMemory:
             obj = np.array(self.num2seq, dtype=t.dtype)
             a = self.array([len(self.num2seq)], intent.in_, obj)
             if t.elsize == self.type.elsize:
-                assert_(a.has_shared_memory(), repr((self.type.dtype, t.dtype)))
+                assert_(a.has_shared_memory(), repr(
+                    (self.type.dtype, t.dtype)))
             else:
                 assert_(not a.has_shared_memory(), repr(t.dtype))
 
@@ -395,7 +388,8 @@ class TestSharedMemory:
         seq = getattr(self, "num" + inp)
         obj = np.array(seq, dtype=self.type.dtype, order=order)
         obj.setflags(write=(write == "w"))
-        a = self.array(obj.shape, ((order == "C" and intent.in_.c) or intent.in_), obj)
+        a = self.array(obj.shape,
+                       ((order == "C" and intent.in_.c) or intent.in_), obj)
         assert a.has_shared_memory()
 
     def test_inout_2seq(self):
@@ -406,9 +400,8 @@ class TestSharedMemory:
         try:
             a = self.array([2], intent.in_.inout, self.num2seq)
         except TypeError as msg:
-            if not str(msg).startswith(
-                "failed to initialize intent" "(inout|inplace|cache) array"
-            ):
+            if not str(msg).startswith("failed to initialize intent"
+                                       "(inout|inplace|cache) array"):
                 raise
         else:
             raise SystemError("intent(inout) should have failed on sequence")
@@ -424,10 +417,12 @@ class TestSharedMemory:
         try:
             a = self.array(shape, intent.in_.inout, obj)
         except ValueError as msg:
-            if not str(msg).startswith("failed to initialize intent" "(inout) array"):
+            if not str(msg).startswith("failed to initialize intent"
+                                       "(inout) array"):
                 raise
         else:
-            raise SystemError("intent(inout) should have failed on improper array")
+            raise SystemError(
+                "intent(inout) should have failed on improper array")
 
     def test_c_inout_23seq(self):
         obj = np.array(self.num23seq, dtype=self.type.dtype)
@@ -443,20 +438,22 @@ class TestSharedMemory:
 
     def test_c_in_from_23seq(self):
         a = self.array(
-            [len(self.num23seq), len(self.num23seq[0])], intent.in_, self.num23seq
-        )
+            [len(self.num23seq), len(self.num23seq[0])], intent.in_,
+            self.num23seq)
         assert_(not a.has_shared_memory())
 
     def test_in_from_23casttype(self):
         for t in self.type.cast_types():
             obj = np.array(self.num23seq, dtype=t.dtype)
-            a = self.array([len(self.num23seq), len(self.num23seq[0])], intent.in_, obj)
+            a = self.array(
+                [len(self.num23seq), len(self.num23seq[0])], intent.in_, obj)
             assert_(not a.has_shared_memory(), repr(t.dtype))
 
     def test_f_in_from_23casttype(self):
         for t in self.type.cast_types():
             obj = np.array(self.num23seq, dtype=t.dtype, order="F")
-            a = self.array([len(self.num23seq), len(self.num23seq[0])], intent.in_, obj)
+            a = self.array(
+                [len(self.num23seq), len(self.num23seq[0])], intent.in_, obj)
             if t.elsize == self.type.elsize:
                 assert_(a.has_shared_memory(), repr(t.dtype))
             else:
@@ -466,8 +463,7 @@ class TestSharedMemory:
         for t in self.type.cast_types():
             obj = np.array(self.num23seq, dtype=t.dtype)
             a = self.array(
-                [len(self.num23seq), len(self.num23seq[0])], intent.in_.c, obj
-            )
+                [len(self.num23seq), len(self.num23seq[0])], intent.in_.c, obj)
             if t.elsize == self.type.elsize:
                 assert_(a.has_shared_memory(), repr(t.dtype))
             else:
@@ -477,16 +473,16 @@ class TestSharedMemory:
         for t in self.type.cast_types():
             obj = np.array(self.num23seq, dtype=t.dtype, order="F")
             a = self.array(
-                [len(self.num23seq), len(self.num23seq[0])], intent.in_.copy, obj
-            )
+                [len(self.num23seq), len(self.num23seq[0])], intent.in_.copy,
+                obj)
             assert_(not a.has_shared_memory(), repr(t.dtype))
 
     def test_c_copy_in_from_23casttype(self):
         for t in self.type.cast_types():
             obj = np.array(self.num23seq, dtype=t.dtype)
             a = self.array(
-                [len(self.num23seq), len(self.num23seq[0])], intent.in_.c.copy, obj
-            )
+                [len(self.num23seq), len(self.num23seq[0])], intent.in_.c.copy,
+                obj)
             assert_(not a.has_shared_memory(), repr(t.dtype))
 
     def test_in_cache_from_2casttype(self):
@@ -494,7 +490,7 @@ class TestSharedMemory:
             if t.elsize != self.type.elsize:
                 continue
             obj = np.array(self.num2seq, dtype=t.dtype)
-            shape = (len(self.num2seq),)
+            shape = (len(self.num2seq), )
             a = self.array(shape, intent.in_.c.cache, obj)
             assert_(a.has_shared_memory(), repr(t.dtype))
 
@@ -511,33 +507,31 @@ class TestSharedMemory:
             try:
                 a = self.array(shape, intent.in_.cache, obj[::-1])
             except ValueError as msg:
-                if not str(msg).startswith(
-                    "failed to initialize" " intent(cache) array"
-                ):
+                if not str(msg).startswith("failed to initialize"
+                                           " intent(cache) array"):
                     raise
             else:
                 raise SystemError(
-                    "intent(cache) should have failed on multisegmented array"
-                )
+                    "intent(cache) should have failed on multisegmented array")
 
     def test_in_cache_from_2casttype_failure(self):
         for t in self.type.all_types():
             if t.elsize >= self.type.elsize:
                 continue
             obj = np.array(self.num2seq, dtype=t.dtype)
-            shape = (len(self.num2seq),)
+            shape = (len(self.num2seq), )
             try:
                 self.array(shape, intent.in_.cache, obj)  # Should succeed
             except ValueError as msg:
-                if not str(msg).startswith(
-                    "failed to initialize" " intent(cache) array"
-                ):
+                if not str(msg).startswith("failed to initialize"
+                                           " intent(cache) array"):
                     raise
             else:
-                raise SystemError("intent(cache) should have failed on smaller array")
+                raise SystemError(
+                    "intent(cache) should have failed on smaller array")
 
     def test_cache_hidden(self):
-        shape = (2,)
+        shape = (2, )
         a = self.array(shape, intent.cache.hide, None)
         assert_(a.arr.shape == shape)
 
@@ -549,17 +543,15 @@ class TestSharedMemory:
         try:
             a = self.array(shape, intent.cache.hide, None)
         except ValueError as msg:
-            if not str(msg).startswith(
-                "failed to create intent" "(cache|hide)|optional array"
-            ):
+            if not str(msg).startswith("failed to create intent"
+                                       "(cache|hide)|optional array"):
                 raise
         else:
             raise SystemError(
-                "intent(cache) should have failed on undefined dimensions"
-            )
+                "intent(cache) should have failed on undefined dimensions")
 
     def test_hidden(self):
-        shape = (2,)
+        shape = (2, )
         a = self.array(shape, intent.hide, None)
         assert_(a.arr.shape == shape)
         assert_(a.arr_equal(a.arr, np.zeros(shape, dtype=self.type.dtype)))
@@ -580,17 +572,15 @@ class TestSharedMemory:
         try:
             a = self.array(shape, intent.hide, None)
         except ValueError as msg:
-            if not str(msg).startswith(
-                "failed to create intent" "(cache|hide)|optional array"
-            ):
+            if not str(msg).startswith("failed to create intent"
+                                       "(cache|hide)|optional array"):
                 raise
         else:
-            raise SystemError(
-                "intent(hide) should have failed" " on undefined dimensions"
-            )
+            raise SystemError("intent(hide) should have failed"
+                              " on undefined dimensions")
 
     def test_optional_none(self):
-        shape = (2,)
+        shape = (2, )
         a = self.array(shape, intent.optional, None)
         assert_(a.arr.shape == shape)
         assert_(a.arr_equal(a.arr, np.zeros(shape, dtype=self.type.dtype)))
@@ -609,7 +599,7 @@ class TestSharedMemory:
 
     def test_optional_from_2seq(self):
         obj = self.num2seq
-        shape = (len(obj),)
+        shape = (len(obj), )
         a = self.array(shape, intent.optional, obj)
         assert_(a.arr.shape == shape)
         assert_(not a.has_shared_memory())
@@ -653,7 +643,8 @@ class TestSharedMemory:
             assert_(obj[1][2] == a.arr[1][2], repr((obj, a.arr)))
             a.arr[1][2] = 54
             assert_(
-                obj[1][2] == a.arr[1][2] == np.array(54, dtype=self.type.dtype),
+                obj[1][2] == a.arr[1][2] == np.array(54,
+                                                     dtype=self.type.dtype),
                 repr((obj, a.arr)),
             )
             assert_(a.arr is obj)

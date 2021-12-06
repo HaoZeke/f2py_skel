@@ -12,13 +12,14 @@ _collect_results = {}
 
 def pytest_configure(config):
     config.addinivalue_line(
-        "markers", "valgrind_error: Tests that are known to error under valgrind."
-    )
+        "markers",
+        "valgrind_error: Tests that are known to error under valgrind.")
     config.addinivalue_line(
-        "markers", "leaks_references: Tests that are known to leak references."
-    )
+        "markers",
+        "leaks_references: Tests that are known to leak references.")
     config.addinivalue_line("markers", "slow: Tests that are very slow.")
-    config.addinivalue_line("markers", "slow_pypy: Tests that are very slow on pypy.")
+    config.addinivalue_line("markers",
+                            "slow_pypy: Tests that are very slow on pypy.")
 
 
 def pytest_addoption(parser):
@@ -26,14 +27,12 @@ def pytest_addoption(parser):
         "--available-memory",
         action="store",
         default=None,
-        help=(
-            "Set amount of memory available for running the "
-            "test suite. This can result to tests requiring "
-            "especially large amounts of memory to be skipped. "
-            "Equivalent to setting environment variable "
-            "NPY_AVAILABLE_MEM. Default: determined"
-            "automatically."
-        ),
+        help=("Set amount of memory available for running the "
+              "test suite. This can result to tests requiring "
+              "especially large amounts of memory to be skipped. "
+              "Equivalent to setting environment variable "
+              "NPY_AVAILABLE_MEM. Default: determined"
+              "automatically."),
     )
 
 

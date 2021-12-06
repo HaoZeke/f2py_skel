@@ -18,7 +18,7 @@ class TestReturnReal(util.F2PyTest):
         assert_(abs(t("234.6") - 234.6) <= err)
         assert_(abs(t(-234) + 234) <= err)
         assert_(abs(t([234]) - 234) <= err)
-        assert_(abs(t((234,)) - 234.0) <= err)
+        assert_(abs(t((234, )) - 234.0) <= err)
         assert_(abs(t(array(234)) - 234.0) <= err)
         assert_(abs(t(array([234])) - 234.0) <= err)
         assert_(abs(t(array([[234]])) - 234.0) <= err)
@@ -42,7 +42,7 @@ class TestReturnReal(util.F2PyTest):
         assert_raises(Exception, t, {})
 
         try:
-            r = t(10 ** 400)
+            r = t(10**400)
             assert_(repr(r) in ["inf", "Infinity"], repr(r))
         except OverflowError:
             pass

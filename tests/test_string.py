@@ -12,7 +12,8 @@ class TestString(util.F2PyTest):
     @pytest.mark.slow
     def test_char(self):
         strings = np.array(["ab", "cd", "ef"], dtype="c").T
-        inp, out = self.module.char_test.change_strings(strings, strings.shape[1])
+        inp, out = self.module.char_test.change_strings(
+            strings, strings.shape[1])
         assert_array_equal(inp, strings)
         expected = strings.copy()
         expected[1, :] = "AAA"
@@ -56,7 +57,7 @@ class TestFixedString(util.F2PyTest):
             end = len(s)
         i = 0
         for j in range(start, min(end, len(s))):
-            i += s[j] * 10 ** j
+            i += s[j] * 10**j
         return i
 
     def _get_input(self, intent="in"):

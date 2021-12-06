@@ -18,10 +18,10 @@ class TestF77Callback(util.F2PyTest):
     def test_all(self, name):
         self.check_function(name)
 
-    @pytest.mark.xfail(IS_PYPY, reason="PyPy cannot modify tp_doc after PyType_Ready")
+    @pytest.mark.xfail(IS_PYPY,
+                       reason="PyPy cannot modify tp_doc after PyType_Ready")
     def test_docstring(self):
-        expected = textwrap.dedent(
-            """\
+        expected = textwrap.dedent("""\
         a = t(fun,[fun_extra_args])
 
         Wrapper for ``t``.
@@ -46,26 +46,25 @@ class TestF77Callback(util.F2PyTest):
             def fun(): return a
             Return objects:
                 a : int
-        """
-        )
+        """)
         assert_equal(self.module.t.__doc__, expected)
 
     def check_function(self, name):
         t = getattr(self.module, name)
         r = t(lambda: 4)
         assert_(r == 4, repr(r))
-        r = t(lambda a: 5, fun_extra_args=(6,))
+        r = t(lambda a: 5, fun_extra_args=(6, ))
         assert_(r == 5, repr(r))
-        r = t(lambda a: a, fun_extra_args=(6,))
+        r = t(lambda a: a, fun_extra_args=(6, ))
         assert_(r == 6, repr(r))
-        r = t(lambda a: 5 + a, fun_extra_args=(7,))
+        r = t(lambda a: 5 + a, fun_extra_args=(7, ))
         assert_(r == 12, repr(r))
-        r = t(lambda a: math.degrees(a), fun_extra_args=(math.pi,))
+        r = t(lambda a: math.degrees(a), fun_extra_args=(math.pi, ))
         assert_(r == 180, repr(r))
-        r = t(math.degrees, fun_extra_args=(math.pi,))
+        r = t(math.degrees, fun_extra_args=(math.pi, ))
         assert_(r == 180, repr(r))
 
-        r = t(self.module.func, fun_extra_args=(6,))
+        r = t(self.module.func, fun_extra_args=(6, ))
         assert_(r == 17, repr(r))
         r = t(self.module.func0)
         assert_(r == 11, repr(r))
@@ -85,9 +84,8 @@ class TestF77Callback(util.F2PyTest):
         r = t(a.mth)
         assert_(r == 9, repr(r))
 
-    @pytest.mark.skipif(
-        sys.platform == "win32", reason="Fails with MinGW64 Gfortran (Issue #9673)"
-    )
+    @pytest.mark.skipif(sys.platform == "win32",
+                        reason="Fails with MinGW64 Gfortran (Issue #9673)")
     def test_string_callback(self):
         def callback(code):
             if code == "r":
@@ -99,9 +97,8 @@ class TestF77Callback(util.F2PyTest):
         r = f(callback)
         assert_(r == 0, repr(r))
 
-    @pytest.mark.skipif(
-        sys.platform == "win32", reason="Fails with MinGW64 Gfortran (Issue #9673)"
-    )
+    @pytest.mark.skipif(sys.platform == "win32",
+                        reason="Fails with MinGW64 Gfortran (Issue #9673)")
     def test_string_callback_array(self):
         # See gh-10027
         cu = np.zeros((1, 8), "S1")
@@ -145,9 +142,8 @@ class TestF77Callback(util.F2PyTest):
                 errors.append(traceback.format_exc())
 
         threads = [
-            threading.Thread(target=runner, args=(arg,))
-            for arg in ("t", "t2")
-            for n in range(20)
+            threading.Thread(target=runner, args=(arg, ))
+            for arg in ("t", "t2") for n in range(20)
         ]
 
         for t in threads:

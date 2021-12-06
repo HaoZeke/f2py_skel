@@ -12,7 +12,7 @@ class TestReturnInteger(util.F2PyTest):
         assert_(t("123") == 123)
         assert_(t(-123) == -123)
         assert_(t([123]) == 123)
-        assert_(t((123,)) == 123)
+        assert_(t((123, )) == 123)
         assert_(t(array(123)) == 123)
         assert_(t(array([123])) == 123)
         assert_(t(array([[123]])) == 123)
@@ -44,10 +44,13 @@ class TestFReturnInteger(TestReturnInteger):
         util.getpath("tests", "src", "return_integer", "foo90.f90"),
     ]
 
-    @pytest.mark.parametrize("name", "t0,t1,t2,t4,t8,s0,s1,s2,s4,s8".split(","))
+    @pytest.mark.parametrize("name",
+                             "t0,t1,t2,t4,t8,s0,s1,s2,s4,s8".split(","))
     def test_all_f77(self, name):
         self.check_function(getattr(self.module, name), name)
 
-    @pytest.mark.parametrize("name", "t0,t1,t2,t4,t8,s0,s1,s2,s4,s8".split(","))
+    @pytest.mark.parametrize("name",
+                             "t0,t1,t2,t4,t8,s0,s1,s2,s4,s8".split(","))
     def test_all_f90(self, name):
-        self.check_function(getattr(self.module.f90_return_integer, name), name)
+        self.check_function(getattr(self.module.f90_return_integer, name),
+                            name)

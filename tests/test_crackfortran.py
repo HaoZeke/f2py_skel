@@ -87,8 +87,10 @@ class TestMarkinnerspaces:
         assert_equal(markinnerspaces(r'a "b c" \" \"'), r'a "b@_@c" \" \"')
 
     def test_ignore_inner_quotes(self):
-        assert_equal(markinnerspaces("a 'b c\" \" d' e"), "a 'b@_@c\"@_@\"@_@d' e")
-        assert_equal(markinnerspaces("a \"b c' ' d\" e"), "a \"b@_@c'@_@'@_@d\" e")
+        assert_equal(markinnerspaces("a 'b c\" \" d' e"),
+                     "a 'b@_@c\"@_@\"@_@d' e")
+        assert_equal(markinnerspaces("a \"b c' ' d\" e"),
+                     "a \"b@_@c'@_@'@_@d\" e")
 
     def test_multiple_relevant_spaces(self):
         assert_equal(markinnerspaces("a 'b c' 'd e'"), "a 'b@_@c' 'd@_@e'")
@@ -128,8 +130,7 @@ class TestDimSpec(util.F2PyTest):
 
     suffix = ".f90"
 
-    code_template = textwrap.dedent(
-        """
+    code_template = textwrap.dedent("""
       function get_arr_size_{count}(a, n) result (length)
         integer, intent(in) :: n
         integer, dimension({dimspec}), intent(out) :: a
@@ -146,10 +147,11 @@ class TestDimSpec(util.F2PyTest):
           print*, "a=", a
         endif
       end subroutine
-    """
-    )
+    """)
 
-    linear_dimspecs = ["n", "2*n", "2:n", "n/2", "5 - n/2", "3*n:20", "n*(n+1):n*(n+5)"]
+    linear_dimspecs = [
+        "n", "2*n", "2:n", "n/2", "5 - n/2", "3*n:20", "n*(n+1):n*(n+5)"
+    ]
     nonlinear_dimspecs = ["2*n:3*n*n+2*n"]
     all_dimspecs = linear_dimspecs + nonlinear_dimspecs
 

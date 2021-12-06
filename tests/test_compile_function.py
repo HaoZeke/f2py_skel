@@ -23,7 +23,8 @@ def setup_module():
 # extra_args can be a list (since gh-11937) or string.
 # also test absence of extra_args
 @pytest.mark.xfail(reason="See https://github.com/HaoZeke/f2py_skel/issues/2")
-@pytest.mark.parametrize("extra_args", [["--noopt", "--debug"], "--noopt --debug", ""])
+@pytest.mark.parametrize("extra_args",
+                         [["--noopt", "--debug"], "--noopt --debug", ""])
 @pytest.mark.leaks_references(reason="Imported module seems never deleted.")
 def test_f2py_init_compile(extra_args):
     # flush through the f2py __init__ compile() function code path as a
@@ -54,9 +55,10 @@ def test_f2py_init_compile(extra_args):
         # its own invocation of subprocess that circumvents the
         # f2py.compile code block under test
         with util.switchdir(moddir):
-            ret_val = f2py_skel.compile(
-                fsource, modulename=modname, extra_args=extra_args, source_fn=source_fn
-            )
+            ret_val = f2py_skel.compile(fsource,
+                                        modulename=modname,
+                                        extra_args=extra_args,
+                                        source_fn=source_fn)
 
             # check for compile success return value
             assert_equal(ret_val, 0)
@@ -112,7 +114,7 @@ def test_f2py_init_compile_bad_cmd():
 def test_compile_from_strings(tmpdir, fsource):
     # Make sure we can compile str and bytes gh-12796
     with util.switchdir(tmpdir):
-        ret_val = f2py_skel.compile(
-            fsource, modulename="test_compile_from_strings", extension=".f90"
-        )
+        ret_val = f2py_skel.compile(fsource,
+                                    modulename="test_compile_from_strings",
+                                    extension=".f90")
         assert_equal(ret_val, 0)

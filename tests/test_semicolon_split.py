@@ -28,9 +28,7 @@ void foo(int* x) {{
         end subroutine foo
     end interface
 end python module {module}
-    """.format(
-        module=module_name
-    )
+    """.format(module=module_name)
 
     def test_multiline(self):
         assert_equal(self.module.foo(), 42)
@@ -62,9 +60,7 @@ void foo(int* x) {{
         end subroutine foo
     end interface
 end python module {module}
-    """.format(
-        module=module_name
-    )
+    """.format(module=module_name)
 
     def test_callstatement(self):
         assert_equal(self.module.foo(), 42)
