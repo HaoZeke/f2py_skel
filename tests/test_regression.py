@@ -3,7 +3,6 @@ import pytest
 
 import f2py_skel
 import numpy as np
-from numpy.testing import assert_, assert_raises, assert_equal, assert_string_equal
 
 from . import util
 
@@ -16,12 +15,12 @@ class TestIntentInOut(util.F2PyTest):
     def test_inout(self):
         # non-contiguous should raise error
         x = np.arange(6, dtype=np.float32)[::2]
-        assert_raises(ValueError, self.module.foo, x)
+        pytest.raises(ValueError, self.module.foo, x)
 
         # check values with contiguous array
         x = np.arange(3, dtype=np.float32)
         self.module.foo(x)
-        assert_equal(x, [3, 1, 2])
+        assert np.allclose(x, [3, 1, 2])
 
 
 class TestNumpyVersionAttribute(util.F2PyTest):
@@ -33,19 +32,13 @@ class TestNumpyVersionAttribute(util.F2PyTest):
     def test_numpy_version_attribute(self):
 
         # Check that self.module has an attribute named "__f2py_numpy_version__"
-        assert_(
-            hasattr(self.module, "__f2py_numpy_version__"),
-            msg="Fortran module does not have __f2py_numpy_version__",
-        )
+        assert hasattr(self.module, "__f2py_numpy_version__")
 
         # Check that the attribute __f2py_numpy_version__ is a string
-        assert_(
-            isinstance(self.module.__f2py_numpy_version__, str),
-            msg="__f2py_numpy_version__ is not a string",
-        )
+        assert isinstance(self.module.__f2py_numpy_version__, str)
 
         # Check that __f2py_numpy_version__ has the value numpy.__version__
-        assert_string_equal(np.__version__, self.module.__f2py_numpy_version__)
+        assert np.__version__ == self.module.__f2py_numpy_version__
 
 
 def test_include_path():
