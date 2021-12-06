@@ -400,8 +400,8 @@ class TestSharedMemory:
         try:
             a = self.array([2], intent.in_.inout, self.num2seq)
         except TypeError as msg:
-            if not str(msg).startswith("failed to initialize intent"
-                                       "(inout|inplace|cache) array"):
+            if not str(msg).startswith(
+                    "failed to initialize intent(inout|inplace|cache) array"):
                 raise
         else:
             raise SystemError("intent(inout) should have failed on sequence")
@@ -417,8 +417,8 @@ class TestSharedMemory:
         try:
             a = self.array(shape, intent.in_.inout, obj)
         except ValueError as msg:
-            if not str(msg).startswith("failed to initialize intent"
-                                       "(inout) array"):
+            if not str(msg).startswith(
+                    "failed to initialize intent(inout) array"):
                 raise
         else:
             raise SystemError(
@@ -543,8 +543,8 @@ class TestSharedMemory:
         try:
             a = self.array(shape, intent.cache.hide, None)
         except ValueError as msg:
-            if not str(msg).startswith("failed to create intent"
-                                       "(cache|hide)|optional array"):
+            if not str(msg).startswith(
+                    "failed to create intent(cache|hide)|optional array"):
                 raise
         else:
             raise SystemError(
@@ -572,12 +572,12 @@ class TestSharedMemory:
         try:
             a = self.array(shape, intent.hide, None)
         except ValueError as msg:
-            if not str(msg).startswith("failed to create intent"
-                                       "(cache|hide)|optional array"):
+            if not str(msg).startswith(
+                    "failed to create intent(cache|hide)|optional array"):
                 raise
         else:
-            raise SystemError("intent(hide) should have failed"
-                              " on undefined dimensions")
+            raise SystemError(
+                "intent(hide) should have failed on undefined dimensions")
 
     def test_optional_none(self):
         shape = (2, )
