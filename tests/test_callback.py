@@ -134,7 +134,7 @@ class TestF77Callback(util.F2PyTest):
 
         def runner(name):
             try:
-                for j in range(50):
+                for _ in range(50):
                     r = self.module.t(cb)
                     assert r == 42
                     self.check_function(name)
