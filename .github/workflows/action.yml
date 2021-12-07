@@ -50,3 +50,9 @@ jobs:
             curl -Os https://uploader.codecov.io/latest/linux/codecov
             chmod +x codecov
             ./codecov -t ${CODECOV_TOKEN}
+
+      - name: Upload to Codacy
+        env:
+            CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
+        run: |
+            bash <(curl -Ls https://coverage.codacy.com/get.sh) report -r coverage.xml -t $CODACY_PROJECT_TOKEN
