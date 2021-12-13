@@ -22,7 +22,7 @@ class PathDeprecationLoader(types.ModuleType):
 
            from f2py_skel.crackfortran import markinnerspaces
 
-       Will fail.
+       Will fail, since crackfortran is a statement, not really a module.
 
     """
     def __init__(self,
@@ -38,14 +38,10 @@ class PathDeprecationLoader(types.ModuleType):
         self._module = self._lload()
 
     def _lload(self) -> types.ModuleType:
-        """Load the module lazily."""
-        spec = importlib.util.find_spec(self.__name__)
-        loader = importlib.util.LazyLoader(spec.loader)
-        spec.loader = loader
-        module = importlib.util.module_from_spec(spec)
+        """Load the module"""
+        module = importlib.import_module(self.__name__)
         sys.modules[self._local_name] = module
         self._parent_scope[self._local_name] = module
-        loader.exec_module(module)
 
         # Emit a warning if one was specified
         if self._warnmsg:
