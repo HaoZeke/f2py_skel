@@ -1,12 +1,8 @@
 import textwrap, re, sys, subprocess, shlex
 from pathlib import Path
-from unittest.mock import patch
 from collections import namedtuple
 
 import pytest
-
-import numpy as np
-from numpy.testing import assert_, assert_equal, IS_PYPY
 
 from .. import util
 from f2py_skel.frontend import main as f2pycli
@@ -42,7 +38,6 @@ def get_io_paths(fname_inp, mname="untitled"):
             The possible paths which are generated, not all of which exist
     """
     bpath = Path(fname_inp)
-    bstem = bpath.stem
     return PPaths(
         finp=bpath.with_suffix(".f"),
         f90inp=bpath.with_suffix(".f90"),
@@ -223,6 +218,7 @@ def test_mod_gen_f77(capfd, hello_world_f90, monkeypatch):
 
 def test_lower_cmod(capfd, hello_world_f77, monkeypatch):
     """Lowers cases by flag or when -h is present
+
     CLI :: --[no-]lower
     """
     foutl = get_io_paths(hello_world_f77, mname="test")
@@ -248,6 +244,7 @@ def test_lower_cmod(capfd, hello_world_f77, monkeypatch):
 
 def test_lower_sig(capfd, hello_world_f77, monkeypatch):
     """Lowers cases in signature files by flag or when -h is present
+
     CLI :: --[no-]lower -h
     """
     foutl = get_io_paths(hello_world_f77, mname="test")
@@ -286,12 +283,12 @@ def test_lower_sig(capfd, hello_world_f77, monkeypatch):
 
 def test_build_dir(capfd, hello_world_f90, monkeypatch):
     """Ensures that the build directory can be specified
+
     CLI :: --build-dir
     """
     ipath = Path(hello_world_f90)
     mname = "blah"
     odir = "tttmp"
-    opath = Path(hello_world_f90).parent / odir
     monkeypatch.setattr(sys, "argv",
                         f'f2py -m {mname} {ipath} --build-dir {odir}'.split())
 
@@ -303,6 +300,7 @@ def test_build_dir(capfd, hello_world_f90, monkeypatch):
 
 def test_overwrite(capfd, hello_world_f90, monkeypatch):
     """Ensures that the build directory can be specified
+
     CLI :: --overwrite-signature
     """
     ipath = Path(hello_world_f90)
@@ -319,6 +317,7 @@ def test_overwrite(capfd, hello_world_f90, monkeypatch):
 
 def test_latexdoc(capfd, hello_world_f90, monkeypatch):
     """Ensures that TeX documentation is written out
+
     CLI :: --latex-doc
     """
     ipath = Path(hello_world_f90)
@@ -337,6 +336,7 @@ def test_latexdoc(capfd, hello_world_f90, monkeypatch):
 
 def test_nolatexdoc(capfd, hello_world_f90, monkeypatch):
     """Ensures that TeX documentation is written out
+
     CLI :: --no-latex-doc
     """
     ipath = Path(hello_world_f90)
@@ -352,6 +352,7 @@ def test_nolatexdoc(capfd, hello_world_f90, monkeypatch):
 
 def test_shortlatex(capfd, hello_world_f90, monkeypatch):
     """Ensures that truncated documentation is written out
+
     TODO: Test to ensure this has no effect without --latex-doc
     CLI :: --latex-doc --short-latex
     """
@@ -374,6 +375,7 @@ def test_shortlatex(capfd, hello_world_f90, monkeypatch):
 
 def test_restdoc(capfd, hello_world_f90, monkeypatch):
     """Ensures that RsT documentation is written out
+
     CLI :: --rest-doc
     """
     ipath = Path(hello_world_f90)
@@ -392,6 +394,7 @@ def test_restdoc(capfd, hello_world_f90, monkeypatch):
 
 def test_norestexdoc(capfd, hello_world_f90, monkeypatch):
     """Ensures that TeX documentation is written out
+
     CLI :: --no-rest-doc
     """
     ipath = Path(hello_world_f90)
@@ -407,6 +410,7 @@ def test_norestexdoc(capfd, hello_world_f90, monkeypatch):
 
 def test_debugcapi(capfd, hello_world_f90, monkeypatch):
     """Ensures that debugging wrappers are written
+
     CLI :: --debug-capi
     """
     ipath = Path(hello_world_f90)
@@ -423,6 +427,7 @@ def test_debugcapi(capfd, hello_world_f90, monkeypatch):
 @pytest.mark.slow
 def test_debugcapi_bld(capfd, hello_world_f90, monkeypatch):
     """Ensures that debugging wrappers work
+
     CLI :: --debug-capi -c
     """
     ipath = Path(hello_world_f90)
@@ -451,6 +456,7 @@ debug-capi:Freeing memory.
 
 def test_wrapfunc_def(capfd, hello_world_f90, monkeypatch):
     """Ensures that fortran subroutine wrappers for F77 are included by default
+
     CLI :: --[no]-wrap-functions
     """
     # Implied
@@ -475,6 +481,7 @@ def test_wrapfunc_def(capfd, hello_world_f90, monkeypatch):
 
 def test_nowrapfunc(capfd, hello_world_f90, monkeypatch):
     """Ensures that fortran subroutine wrappers for F77 can be disabled
+
     CLI :: --no-wrap-functions
     """
     ipath = Path(hello_world_f90)
@@ -490,6 +497,7 @@ def test_nowrapfunc(capfd, hello_world_f90, monkeypatch):
 
 def test_inclheader(capfd, hello_world_f90, monkeypatch):
     """Add to the include directories
+
     CLI :: -include
     TODO: Document this in the help string
     """
@@ -512,6 +520,7 @@ def test_inclheader(capfd, hello_world_f90, monkeypatch):
 
 def test_inclpath():
     """Add to the include directories
+
     CLI :: --include-paths
     """
     # TODO: populate
@@ -520,6 +529,7 @@ def test_inclpath():
 
 def test_hlink():
     """Add to the include directories
+
     CLI :: --help-link
     """
     # TODO: populate
@@ -528,6 +538,7 @@ def test_hlink():
 
 def test_f2cmap():
     """Check that Fortran-to-Python KIND specs can be passed
+
     CLI :: --f2cmap
     """
     # TODO: populate
@@ -536,6 +547,7 @@ def test_f2cmap():
 
 def test_quiet(capfd, hello_world_f90, monkeypatch):
     """Reduce verbosity
+
     CLI :: --quiet
     """
     ipath = Path(hello_world_f90)
@@ -549,6 +561,7 @@ def test_quiet(capfd, hello_world_f90, monkeypatch):
 
 def test_verbose(capfd, hello_world_f90, monkeypatch):
     """Increase verbosity
+
     CLI :: --verbose
     """
     ipath = Path(hello_world_f90)
@@ -562,9 +575,9 @@ def test_verbose(capfd, hello_world_f90, monkeypatch):
 
 def test_version(capfd, monkeypatch):
     """Ensure version
+
     CLI :: -v
     """
-    mname = "blah"
     monkeypatch.setattr(sys, "argv", 'f2py -v'.split())
     # TODO: f2py2e should not call sys.exit() after printing the version
     with pytest.raises(SystemExit):
