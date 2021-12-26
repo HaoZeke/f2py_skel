@@ -1,5 +1,8 @@
 * About [[https://codecov.io/gh/HaoZeke/f2py_skel][file:https://codecov.io/gh/HaoZeke/f2py_skel/branch/main/graph/badge.svg?token=A4UN4ESLYY]]
 
+  #+ATTR_HTML: title="Codacy Badge"
+  [[https://app.codacy.com/gh/HaoZeke/f2py_skel?utm_source=github.com&utm_medium=referral&utm_content=HaoZeke/f2py_skel&utm_campaign=Badge_Grade_Settings][file:https://api.codacy.com/project/badge/Grade/f892f7d25e234b70ac96d0c0db685123]]
+
 This is a skeletal version of ~f2py~. Essentially it is stripped out of ~numpy~. Uses ~poetry~, and ~cocogitto~ for enforcing ~numpy~ guidelines for commits.
 
 #+begin_quote
