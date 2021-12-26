@@ -1,0 +1,2 @@
+# In line with the actual GHA
+-P ubuntu-latest=nektos/act-environments-ubuntu:18.04
