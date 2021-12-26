@@ -331,8 +331,8 @@ def test_latexdoc(capfd, hello_world_f90, monkeypatch):
     out, _ = capfd.readouterr()
     assert f"Documentation is saved to file \"./{mname}module.tex\"" in out
     with util.switchdir(ipath.parent):
-        otex = Path(f"./{mname}module.tex").open().read()
-        assert "\\documentclass" in otex
+        with Path(f"./{mname}module.tex").open() as otex:
+            assert "\\documentclass" in otex.read()
 
 
 def test_nolatexdoc(capfd, hello_world_f90, monkeypatch):
@@ -368,8 +368,8 @@ def test_shortlatex(capfd, hello_world_f90, monkeypatch):
     out, _ = capfd.readouterr()
     assert f"Documentation is saved to file \"./{mname}module.tex\"" in out
     with util.switchdir(ipath.parent):
-        otex = Path(f"./{mname}module.tex").open().read()
-        assert "\\documentclass" not in otex
+        with Path(f"./{mname}module.tex").open() as otex:
+            assert "\\documentclass" not in otex.read()
 
 
 def test_restdoc(capfd, hello_world_f90, monkeypatch):
@@ -386,8 +386,8 @@ def test_restdoc(capfd, hello_world_f90, monkeypatch):
     out, _ = capfd.readouterr()
     assert f"ReST Documentation is saved to file \"./{mname}module.rest\"" in out
     with util.switchdir(ipath.parent):
-        orst = Path(f"./{mname}module.rest").open().read()
-        assert r".. -*- rest -*-" in orst
+        with Path(f"./{mname}module.rest").open() as orst:
+            assert r".. -*- rest -*-" in orst.read()
 
 
 def test_norestexdoc(capfd, hello_world_f90, monkeypatch):
@@ -416,8 +416,8 @@ def test_debugcapi(capfd, hello_world_f90, monkeypatch):
 
     with util.switchdir(ipath.parent):
         f2pycli()
-        ocmod = Path(f"./{mname}module.c").open().read()
-        assert r"#define DEBUGCFUNCS" in ocmod
+        with Path(f"./{mname}module.c").open() as ocmod:
+            assert r"#define DEBUGCFUNCS" in ocmod.read()
 
 
 @pytest.mark.slow
@@ -504,9 +504,10 @@ def test_inclheader(capfd, hello_world_f90, monkeypatch):
 
     with util.switchdir(ipath.parent):
         f2pycli()
-        ocmod = Path(f"./{mname}module.c").open().read()
-        assert "#include <stdbool.h>" in ocmod
-        assert "#include <stdio.h>" in ocmod
+        with Path(f"./{mname}module.c").open() as ocmod:
+            ocmr = ocmod.read()
+            assert "#include <stdbool.h>" in ocmr
+            assert "#include <stdio.h>" in ocmr
 
 
 def test_inclpath():
