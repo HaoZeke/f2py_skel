@@ -12,15 +12,6 @@ when it involves compiling ~numpy~ each time. That being said, patches and files
 from this repository should be essentially interoperable with the ~numpy~ repo
 after adjusting for file paths.
 
-** Getting started
-
-#+begin_src bash
-poetry install # expects gfortran on the path
-poetry shell
-poetry run f2py
-pytest
-#+end_src
-
 Note that the actual command installed is ~f2py_skel~, however for convenience,
 a ~poetry~ target is provided.
 
@@ -28,6 +19,29 @@ a ~poetry~ target is provided.
 Seriously *do not* ~pip install~ this
 #+end_quote
 
+** Development environment
+The easiest way to get started is with the ~numpy~ Gitpod ~docker~ image.
+#+begin_src bash
+# From the git root
+docker run -v $(pwd):/home/gitpod/f2py_skel --name f2py_npdev -it numpy/numpy-dev:latest
+# Later
+docker start f2py_npdev
+docker attach f2py_npdev
+#+end_src
+Once within the environment:
+#+begin_src bash
+cd f2py_skel
+pip install .
+pytest
+#+end_src
+*** Getting started locally
+
+#+begin_src bash
+poetry install # expects gfortran on the path
+poetry shell
+poetry run f2py
+pytest
+#+end_src
 ** To be implemented
 - [X] Tests
 ** Plans
