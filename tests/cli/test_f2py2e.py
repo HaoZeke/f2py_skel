@@ -1,4 +1,4 @@
-import textwrap, re, sys
+import textwrap, re, sys, subprocess, shlex
 from pathlib import Path
 from unittest.mock import patch
 from collections import namedtuple
@@ -101,10 +101,22 @@ def test_gen_pyf(capfd, hello_world_f90, monkeypatch):
         assert "Saving signatures to file" in out
         assert Path(f"{str(opath)}").exists()
 
+def test_gen_pyf_stdout(capfd, hello_world_f90, monkeypatch):
+    """Ensures that a signature file can be dumped to stdout
+    CLI :: -h
+    """
+    ipath = Path(hello_world_f90)
+    monkeypatch.setattr(sys, "argv",
+                        f"f2py -h stdout {str(ipath)}".split())
+    with util.switchdir(ipath.parent):
+        f2pycli()
+        out, _ = capfd.readouterr()
+        assert "Saving signatures to file \"./stdout\"" in out
+
 
 def test_gen_pyf_no_overwrite(capfd, hello_world_f90, monkeypatch):
     """Ensures that the CLI refuses to overwrite signature files
-    CLI :: --overwrite-signature
+    CLI :: -h without --overwrite-signature
     """
     ipath = Path(hello_world_f90)
     monkeypatch.setattr(sys, "argv", f"f2py -h faker.pyf {str(ipath)}".split())
@@ -251,3 +263,296 @@ def test_lower_sig(capfd, hello_world_f77, monkeypatch):
         out, _ = capfd.readouterr()
         assert capslo.search(out) is None
         assert capshi.search(out) is not None
+
+def test_build_dir(capfd, hello_world_f90, monkeypatch):
+    """Ensures that the build directory can be specified
+    CLI :: --build-dir
+    """
+    ipath = Path(hello_world_f90)
+    mname = "blah"
+    odir = "tttmp"
+    opath = Path(hello_world_f90).parent / odir
+    monkeypatch.setattr(sys, "argv", f"f2py -m {mname} {str(ipath)} --build-dir {odir}".split())
+
+    with util.switchdir(ipath.parent):
+        f2pycli()
+    out, _ = capfd.readouterr()
+    assert f"Wrote C/API module \"{mname}\" to file \"{odir}/{mname}module.c\"" in out
+
+def test_overwrite(capfd, hello_world_f90, monkeypatch):
+    """Ensures that the build directory can be specified
+    CLI :: --overwrite-signature
+    """
+    ipath = Path(hello_world_f90)
+    monkeypatch.setattr(sys, "argv", f"f2py -h faker.pyf {str(ipath)} --overwrite-signature".split())
+
+    with util.switchdir(ipath.parent):
+        Path("faker.pyf").write_text("Fake news", encoding="ascii")
+        f2pycli()
+    out, _ = capfd.readouterr()
+    assert "Saving signatures to file" in out
+    pass
+
+def test_latexdoc(capfd, hello_world_f90, monkeypatch):
+    """Ensures that TeX documentation is written out
+    CLI :: --latex-doc
+    """
+    ipath = Path(hello_world_f90)
+    mname = "blah"
+    monkeypatch.setattr(sys, "argv", f"f2py -m {mname} {str(ipath)} --latex-doc".split())
+
+    with util.switchdir(ipath.parent):
+        f2pycli()
+    out, _ = capfd.readouterr()
+    assert f"Documentation is saved to file \"./{mname}module.tex\"" in out
+    with util.switchdir(ipath.parent):
+        otex = Path(f"./{mname}module.tex").open().read()
+        assert "\\documentclass" in otex
+
+def test_shortlatex(capfd, hello_world_f90, monkeypatch):
+    """Ensures that truncated documentation is written out
+    TODO: Test to ensure this has no effect without --latex-doc
+    CLI :: --latex-doc --short-latex
+    """
+    ipath = Path(hello_world_f90)
+    mname = "blah"
+    monkeypatch.setattr(sys, "argv", f"f2py -m {mname} {str(ipath)} --latex-doc --short-latex".split())
+
+    with util.switchdir(ipath.parent):
+        f2pycli()
+    out, _ = capfd.readouterr()
+    assert f"Documentation is saved to file \"./{mname}module.tex\"" in out
+    with util.switchdir(ipath.parent):
+        otex = Path(f"./{mname}module.tex").open().read()
+        assert "\\documentclass" not in otex
+
+def test_restdoc(capfd, hello_world_f90, monkeypatch):
+    """Ensures that RsT documentation is written out
+    CLI :: --rest-doc
+    """
+    ipath = Path(hello_world_f90)
+    mname = "blah"
+    monkeypatch.setattr(sys, "argv", f"f2py -m {mname} {str(ipath)} --rest-doc".split())
+
+    with util.switchdir(ipath.parent):
+        f2pycli()
+    out, _ = capfd.readouterr()
+    assert f"ReST Documentation is saved to file \"./{mname}module.rest\"" in out
+    with util.switchdir(ipath.parent):
+        orst = Path(f"./{mname}module.rest").open().read()
+        assert r".. -*- rest -*-" in orst
+
+def test_debugcapi(capfd, hello_world_f90, monkeypatch):
+    """Ensures that debugging wrappers are written
+    CLI :: --debug-capi
+    """
+    ipath = Path(hello_world_f90)
+    mname = "blah"
+    monkeypatch.setattr(sys, "argv", f"f2py -m {mname} {str(ipath)} --debug-capi".split())
+
+    with util.switchdir(ipath.parent):
+        f2pycli()
+        ocmod = Path(f"./{mname}module.c").open().read()
+        assert r"#define DEBUGCFUNCS" in ocmod
+
+@pytest.mark.slow
+def test_debugcapi_bld(capfd, hello_world_f90, monkeypatch):
+    """Ensures that debugging wrappers work
+    CLI :: --debug-capi
+    """
+    ipath = Path(hello_world_f90)
+    mname = "blah"
+    monkeypatch.setattr(sys, "argv", f"f2py -m {mname} {str(ipath)} -c --debug-capi".split())
+
+    with util.switchdir(ipath.parent):
+        f2pycli()
+        cmd_run = shlex.split("python -c \"import blah; blah.hi()\"")
+        rout = subprocess.run(cmd_run, capture_output=True, encoding='UTF-8')
+        eout = ' Hello World\n'
+        eerr = textwrap.dedent("""\
+debug-capi:Python C/API function blah.hi()
+debug-capi:float hi=:output,hidden,scalar
+debug-capi:hi=0
+debug-capi:Fortran subroutine `f2pywraphi(&hi)'
+debug-capi:hi=0
+debug-capi:Building return value.
+debug-capi:Python C/API function blah.hi: successful.
+debug-capi:Freeing memory.
+        """)
+        assert rout.stdout == eout
+        assert rout.stderr == eerr
+
+def test_wrapfunc_def():
+    """Ensures that fortran subroutine wrappers for F77 are included by default
+    CLI :: --wrap-functions (implied)
+    """
+    pass
+
+def test_wrapfunc():
+    """Ensures that fortran subroutine wrappers for F77 are generated by flag
+    CLI :: --[no-]wrap-functions
+    """
+    pass
+
+def test_nowrapfunc():
+    """Ensures that fortran subroutine wrappers for F77 can be disabled
+    CLI :: --no-wrap-functions
+    """
+    pass
+
+def test_inclpath():
+    """Add to the include directories
+    CLI :: --include-paths
+    """
+    pass
+
+def test_inclpath():
+    """Add to the include directories
+    CLI :: --help-link
+    """
+    pass
+
+def test_inclpath():
+    """Check that Fortran-to-Python KIND specs can be passed
+    CLI :: --f2cmap
+    """
+    pass
+
+def test_quiet():
+    """Reduce verbosity
+    CLI :: --quiet
+    """
+    pass
+
+def test_verbose():
+    """Increase verbosity
+    CLI :: --verbose
+    """
+    pass
+
+def test_version():
+    """Ensure version
+    CLI :: -v
+    """
+    pass
+
+def test_npdistop():
+    """
+    CLI :: -c
+    """
+    pass
+
+# Numpy distutils flags
+# TODO: These should be tested separately
+
+def test_npd_fcompiler():
+    """
+    CLI :: -c --fcompiler
+    """
+    pass
+
+def test_npd_compiler():
+    """
+    CLI :: -c --compiler
+    """
+    pass
+
+
+def test_npd_help_fcompiler():
+    """
+    CLI :: -c --help-fcompiler
+    """
+    pass
+
+def test_npd_f77exec():
+    """
+    CLI :: -c --f77exec
+    """
+    pass
+
+def test_npd_f90exec():
+    """
+    CLI :: -c --f90exec
+    """
+    pass
+
+def test_npd_f77flags():
+    """
+    CLI :: -c --f77flags
+    """
+    pass
+
+def test_npd_f90flags():
+    """
+    CLI :: -c --f90flags
+    """
+    pass
+
+def test_npd_opt():
+    """
+    CLI :: -c --opt
+    """
+    pass
+
+def test_npd_arch():
+    """
+    CLI :: -c --arch
+    """
+    pass
+
+def test_npd_noopt():
+    """
+    CLI :: -c --noopt
+    """
+    pass
+
+def test_npd_noarch():
+    """
+    CLI :: -c --noarch
+    """
+    pass
+
+
+def test_npd_debug():
+    """
+    CLI :: -c --debug
+    """
+    pass
+
+
+def test_npd_link_auto():
+    """
+    CLI :: -c --link-<resource>
+    """
+    pass
+
+def test_npd_lib():
+    """
+    CLI :: -c -L/path/to/lib/ -l<libname>
+    """
+    pass
+
+
+def test_npd_define():
+    """
+    CLI :: -D<define>
+    """
+    pass
+
+def test_npd_undefine():
+    """
+    CLI :: -U<name>
+    """
+    pass
+
+def test_npd_incl():
+    """
+    CLI :: -I/path/to/include/
+    """
+    pass
+
+def test_npd_linker():
+    """
+    CLI :: <filename>.o <filename>.so <filename>.a
+    """
+    pass
