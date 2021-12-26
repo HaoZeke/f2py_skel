@@ -11,9 +11,9 @@ from numpy.testing import assert_, assert_equal, IS_PYPY
 from .. import util
 from f2py_skel.frontend import main as f2pycli
 
-#########################
+#############
 # CLI utils and classes #
-#########################
+#############
 
 PPaths = namedtuple("PPaths", "finp, f90inp, pyf, wrap77, wrap90, cmodf")
 
@@ -54,9 +54,9 @@ def get_io_paths(fname_inp, mname="untitled"):
     return foutl
 
 
-##########################
+##############
 # CLI Fixtures and Tests #
-##########################
+#############
 
 
 @pytest.fixture(scope="session")
@@ -87,7 +87,9 @@ def retreal_f77(tmpdir_factory):
 
 
 def test_gen_pyf(capfd, hello_world_f90, monkeypatch):
-    """Ensures that a signature file is generated via the CLI"""
+    """Ensures that a signature file is generated via the CLI
+    CLI :: -h
+    """
     ipath = Path(hello_world_f90)
     opath = Path(hello_world_f90).stem + ".pyf"
     monkeypatch.setattr(sys, "argv",
@@ -101,7 +103,9 @@ def test_gen_pyf(capfd, hello_world_f90, monkeypatch):
 
 
 def test_gen_pyf_no_overwrite(capfd, hello_world_f90, monkeypatch):
-    """Ensures that the CLI refuses to overwrite signature files"""
+    """Ensures that the CLI refuses to overwrite signature files
+    CLI :: --overwrite-signature
+    """
     ipath = Path(hello_world_f90)
     monkeypatch.setattr(sys, "argv", f"f2py -h faker.pyf {str(ipath)}".split())
 
@@ -113,8 +117,66 @@ def test_gen_pyf_no_overwrite(capfd, hello_world_f90, monkeypatch):
     assert "Use --overwrite-signature to overwrite" in err
 
 
+def test_f2py_skip(capfd, retreal_f77, monkeypatch):
+    """Tests that functions can be skipped
+    CLI :: skip:
+    """
+    foutl = get_io_paths(retreal_f77, mname="test")
+    ipath = foutl.finp
+    toskip = "t0 t4 t8 sd s8 s4"
+    remaining = "td s0"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        f"f2py {str(ipath)} {str(foutl.pyf)} -m test skip: {toskip}".split(),
+    )
+    with util.switchdir(ipath.parent):
+        f2pycli()
+    out, err = capfd.readouterr()
+    for skey in toskip.split():
+        assert (
+            f'buildmodule: Could not found the body of interfaced routine "{skey}". Skipping.'
+            in err)
+    for rkey in remaining.split():
+        assert f'Constructing wrapper function "{rkey}"' in out
+
+
+def test_f2py_only(capfd, retreal_f77, monkeypatch):
+    """Test that functions can be kept by only:
+    CLI :: only:
+    """
+    foutl = get_io_paths(retreal_f77, mname="test")
+    ipath = foutl.finp
+    toskip = "t0 t4 t8 sd s8 s4"
+    tokeep = "td s0"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        f"f2py {str(ipath)} {str(foutl.pyf)} -m test only: {tokeep}".split(),
+    )
+    with util.switchdir(ipath.parent):
+        f2pycli()
+    out, err = capfd.readouterr()
+    for skey in toskip.split():
+        assert (
+            f'buildmodule: Could not found the body of interfaced routine "{skey}". Skipping.'
+            in err)
+    for rkey in tokeep.split():
+        assert f'Constructing wrapper function "{rkey}"' in out
+
+
+def test_file_processing_switch():
+    """Tests that it is possible to return to file processing mode
+    CLI :: :
+    BUG: numpy-gh #20520
+    """
+    pass
+
+
 def test_mod_gen_f77(capfd, hello_world_f90, monkeypatch):
-    """Checks the generation of files based on a module name"""
+    """Checks the generation of files based on a module name
+    CLI :: -m
+    """
     MNAME = "hi"
     foutl = get_io_paths(hello_world_f90, mname=MNAME)
     ipath = foutl.f90inp
@@ -129,7 +191,9 @@ def test_mod_gen_f77(capfd, hello_world_f90, monkeypatch):
 
 
 def test_lower_cmod(capfd, hello_world_f77, monkeypatch):
-    """Lowers cases by flag or when -h is present"""
+    """Lowers cases by flag or when -h is present
+    CLI :: --[no-]lower
+    """
     foutl = get_io_paths(hello_world_f77, mname="test")
     ipath = foutl.finp
     capshi = re.compile(r"HI\(\)")
@@ -153,7 +217,9 @@ def test_lower_cmod(capfd, hello_world_f77, monkeypatch):
 
 
 def test_lower_sig(capfd, hello_world_f77, monkeypatch):
-    """Lowers cases in signature files by flag or when -h is present"""
+    """Lowers cases in signature files by flag or when -h is present
+    CLI :: --[no-]lower -h
+    """
     foutl = get_io_paths(hello_world_f77, mname="test")
     ipath = foutl.finp
     # Signature files
@@ -185,47 +251,3 @@ def test_lower_sig(capfd, hello_world_f77, monkeypatch):
         out, _ = capfd.readouterr()
         assert capslo.search(out) is None
         assert capshi.search(out) is not None
-
-
-def test_f2py_skip(capfd, retreal_f77, monkeypatch):
-    """Tests that functions are skipped with skip:"""
-    foutl = get_io_paths(retreal_f77, mname="test")
-    ipath = foutl.finp
-    toskip = "t0 t4 t8 sd s8 s4"
-    remaining = "td s0"
-    monkeypatch.setattr(
-        sys,
-        "argv",
-        f"f2py {str(ipath)} {str(foutl.pyf)} -m test skip: {toskip}".split(),
-    )
-    with util.switchdir(ipath.parent):
-        f2pycli()
-    out, err = capfd.readouterr()
-    for skey in toskip.split():
-        assert (
-            f'buildmodule: Could not found the body of interfaced routine "{skey}". Skipping.'
-            in err)
-    for rkey in remaining.split():
-        assert f'Constructing wrapper function "{rkey}"' in out
-
-
-def test_f2py_only(capfd, retreal_f77, monkeypatch):
-    """Test that functions can be kept by only:"""
-    foutl = get_io_paths(retreal_f77, mname="test")
-    ipath = foutl.finp
-    toskip = "t0 t4 t8 sd s8 s4"
-    tokeep = "td s0"
-    monkeypatch.setattr(
-        sys,
-        "argv",
-        f"f2py {str(ipath)} {str(foutl.pyf)} -m test only: {tokeep}".split(),
-    )
-    with util.switchdir(ipath.parent):
-        f2pycli()
-    out, err = capfd.readouterr()
-    for skey in toskip.split():
-        assert (
-            f'buildmodule: Could not found the body of interfaced routine "{skey}". Skipping.'
-            in err)
-    for rkey in tokeep.split():
-        assert f'Constructing wrapper function "{rkey}"' in out
