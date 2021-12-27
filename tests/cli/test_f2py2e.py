@@ -118,8 +118,8 @@ def test_gen_pyf_no_overwrite(capfd, hello_world_f90, monkeypatch):
         Path("faker.pyf").write_text("Fake news", encoding="ascii")
         with pytest.raises(SystemExit):
             f2pycli()  # Refuse to overwrite
-    _, err = capfd.readouterr()
-    assert "Use --overwrite-signature to overwrite" in err
+            _, err = capfd.readouterr()
+            assert "Use --overwrite-signature to overwrite" in err
 
 
 def test_f2py_skip(capfd, retreal_f77, monkeypatch):
@@ -132,17 +132,16 @@ def test_f2py_skip(capfd, retreal_f77, monkeypatch):
     remaining = "td s0"
     monkeypatch.setattr(
         sys, "argv",
-        f'f2py {ipath} {foutl.pyf} -m test skip: {toskip}'.split())
-
+        f'f2py {ipath} -m test skip: {toskip}'.split())
     with util.switchdir(ipath.parent):
         f2pycli()
-    out, err = capfd.readouterr()
-    for skey in toskip.split():
-        assert (
-            f'buildmodule: Could not found the body of interfaced routine "{skey}". Skipping.'
-            in err)
-    for rkey in remaining.split():
-        assert f'Constructing wrapper function "{rkey}"' in out
+        out, err = capfd.readouterr()
+        for skey in toskip.split():
+            assert (
+                f'buildmodule: Could not found the body of interfaced routine "{skey}". Skipping.'
+                in err)
+        for rkey in remaining.split():
+            assert f'Constructing wrapper function "{rkey}"' in out
 
 
 def test_f2py_only(capfd, retreal_f77, monkeypatch):
@@ -155,17 +154,17 @@ def test_f2py_only(capfd, retreal_f77, monkeypatch):
     tokeep = "td s0"
     monkeypatch.setattr(
         sys, "argv",
-        f'f2py {ipath} {foutl.pyf} -m test only: {tokeep}'.split())
+        f'f2py {ipath} -m test only: {tokeep}'.split())
 
     with util.switchdir(ipath.parent):
         f2pycli()
-    out, err = capfd.readouterr()
-    for skey in toskip.split():
-        assert (
-            f'buildmodule: Could not found the body of interfaced routine "{skey}". Skipping.'
-            in err)
-    for rkey in tokeep.split():
-        assert f'Constructing wrapper function "{rkey}"' in out
+        out, err = capfd.readouterr()
+        for skey in toskip.split():
+            assert (
+                f'buildmodule: Could not found the body of interfaced routine "{skey}". Skipping.'
+                in err)
+        for rkey in tokeep.split():
+            assert f'Constructing wrapper function "{rkey}"' in out
 
 
 @pytest.mark.xfail
@@ -184,19 +183,19 @@ def test_file_processing_switch(capfd, hello_world_f90, retreal_f77,
     monkeypatch.setattr(
         sys,
         "argv",
-        f'f2py {ipath} {foutl.pyf} -m {mname} only: {tokeep} : {ipath2}'.split(
+        f'f2py {ipath} -m {mname} only: {tokeep} : {ipath2}'.split(
         ),
     )
 
     with util.switchdir(ipath.parent):
         f2pycli()
-    out, err = capfd.readouterr()
-    for skey in toskip.split():
-        assert (
-            f'buildmodule: Could not found the body of interfaced routine "{skey}". Skipping.'
-            in err)
-    for rkey in tokeep.split():
-        assert f'Constructing wrapper function "{rkey}"' in out
+        out, err = capfd.readouterr()
+        for skey in toskip.split():
+            assert (
+                f'buildmodule: Could not found the body of interfaced routine "{skey}". Skipping.'
+                in err)
+        for rkey in tokeep.split():
+            assert f'Constructing wrapper function "{rkey}"' in out
 
 
 def test_mod_gen_f77(capfd, hello_world_f90, monkeypatch):
@@ -294,8 +293,8 @@ def test_build_dir(capfd, hello_world_f90, monkeypatch):
 
     with util.switchdir(ipath.parent):
         f2pycli()
-    out, _ = capfd.readouterr()
-    assert f"Wrote C/API module \"{mname}\" to file \"{odir}/{mname}module.c\"" in out
+        out, _ = capfd.readouterr()
+        assert f"Wrote C/API module \"{mname}\" to file \"{odir}/{mname}module.c\"" in out
 
 
 def test_overwrite(capfd, hello_world_f90, monkeypatch):
@@ -311,8 +310,8 @@ def test_overwrite(capfd, hello_world_f90, monkeypatch):
     with util.switchdir(ipath.parent):
         Path("faker.pyf").write_text("Fake news", encoding="ascii")
         f2pycli()
-    out, _ = capfd.readouterr()
-    assert "Saving signatures to file" in out
+        out, _ = capfd.readouterr()
+        assert "Saving signatures to file" in out
 
 
 def test_latexdoc(capfd, hello_world_f90, monkeypatch):
@@ -327,9 +326,8 @@ def test_latexdoc(capfd, hello_world_f90, monkeypatch):
 
     with util.switchdir(ipath.parent):
         f2pycli()
-    out, _ = capfd.readouterr()
-    assert f"Documentation is saved to file \"./{mname}module.tex\"" in out
-    with util.switchdir(ipath.parent):
+        out, _ = capfd.readouterr()
+        assert f"Documentation is saved to file \"./{mname}module.tex\"" in out
         with Path(f"./{mname}module.tex").open() as otex:
             assert "\\documentclass" in otex.read()
 
@@ -346,8 +344,8 @@ def test_nolatexdoc(capfd, hello_world_f90, monkeypatch):
 
     with util.switchdir(ipath.parent):
         f2pycli()
-    out, _ = capfd.readouterr()
-    assert f"Documentation is saved to file \"./{mname}module.tex\"" not in out
+        out, _ = capfd.readouterr()
+        assert f"Documentation is saved to file \"./{mname}module.tex\"" not in out
 
 
 def test_shortlatex(capfd, hello_world_f90, monkeypatch):
@@ -366,9 +364,8 @@ def test_shortlatex(capfd, hello_world_f90, monkeypatch):
 
     with util.switchdir(ipath.parent):
         f2pycli()
-    out, _ = capfd.readouterr()
-    assert f"Documentation is saved to file \"./{mname}module.tex\"" in out
-    with util.switchdir(ipath.parent):
+        out, _ = capfd.readouterr()
+        assert f"Documentation is saved to file \"./{mname}module.tex\"" in out
         with Path(f"./{mname}module.tex").open() as otex:
             assert "\\documentclass" not in otex.read()
 
@@ -385,9 +382,8 @@ def test_restdoc(capfd, hello_world_f90, monkeypatch):
 
     with util.switchdir(ipath.parent):
         f2pycli()
-    out, _ = capfd.readouterr()
-    assert f"ReST Documentation is saved to file \"./{mname}module.rest\"" in out
-    with util.switchdir(ipath.parent):
+        out, _ = capfd.readouterr()
+        assert f"ReST Documentation is saved to file \"./{mname}module.rest\"" in out
         with Path(f"./{mname}module.rest").open() as orst:
             assert r".. -*- rest -*-" in orst.read()
 
@@ -404,8 +400,8 @@ def test_norestexdoc(capfd, hello_world_f90, monkeypatch):
 
     with util.switchdir(ipath.parent):
         f2pycli()
-    out, _ = capfd.readouterr()
-    assert f"ReST Documentation is saved to file \"./{mname}module.rest\"" not in out
+        out, _ = capfd.readouterr()
+        assert f"ReST Documentation is saved to file \"./{mname}module.rest\"" not in out
 
 
 def test_debugcapi(capfd, hello_world_f90, monkeypatch):
@@ -425,7 +421,7 @@ def test_debugcapi(capfd, hello_world_f90, monkeypatch):
 
 
 @pytest.mark.slow
-def test_debugcapi_bld(capfd, hello_world_f90, monkeypatch):
+def test_debugcapi_bld(hello_world_f90, monkeypatch):
     """Ensures that debugging wrappers work
 
     CLI :: --debug-capi -c
@@ -475,8 +471,8 @@ def test_wrapfunc_def(capfd, hello_world_f90, monkeypatch):
 
     with util.switchdir(ipath.parent):
         f2pycli()
-    out, _ = capfd.readouterr()
-    assert r"Fortran 77 wrappers are saved to" in out
+        out, _ = capfd.readouterr()
+        assert r"Fortran 77 wrappers are saved to" in out
 
 
 def test_nowrapfunc(capfd, hello_world_f90, monkeypatch):
@@ -491,8 +487,8 @@ def test_nowrapfunc(capfd, hello_world_f90, monkeypatch):
 
     with util.switchdir(ipath.parent):
         f2pycli()
-    out, _ = capfd.readouterr()
-    assert r"Fortran 77 wrappers are saved to" not in out
+        out, _ = capfd.readouterr()
+        assert r"Fortran 77 wrappers are saved to" not in out
 
 
 def test_inclheader(capfd, hello_world_f90, monkeypatch):
@@ -555,8 +551,8 @@ def test_quiet(capfd, hello_world_f90, monkeypatch):
 
     with util.switchdir(ipath.parent):
         f2pycli()
-    out, _ = capfd.readouterr()
-    assert len(out) == 0
+        out, _ = capfd.readouterr()
+        assert len(out) == 0
 
 
 def test_verbose(capfd, hello_world_f90, monkeypatch):
@@ -569,8 +565,8 @@ def test_verbose(capfd, hello_world_f90, monkeypatch):
 
     with util.switchdir(ipath.parent):
         f2pycli()
-    out, _ = capfd.readouterr()
-    assert "analyzeline" in out
+        out, _ = capfd.readouterr()
+        assert "analyzeline" in out
 
 
 def test_version(capfd, monkeypatch):
@@ -582,13 +578,13 @@ def test_version(capfd, monkeypatch):
     # TODO: f2py2e should not call sys.exit() after printing the version
     with pytest.raises(SystemExit):
         f2pycli()
-    out, _ = capfd.readouterr()
-    import numpy as np
-    assert np.__version__ == out.strip()
+        out, _ = capfd.readouterr()
+        import numpy as np
+        assert np.__version__ == out.strip()
 
 
 @pytest.mark.slow
-def test_npdistop(capfd, hello_world_f90, monkeypatch):
+def test_npdistop(hello_world_f90, monkeypatch):
     """
     CLI :: -c
     """
