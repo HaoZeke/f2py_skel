@@ -15,6 +15,7 @@ module vec
     array%x=array%x+1
     array%y=array%y+1
     array%z=array%z+1
+    print*, "Done modifying"
   end subroutine unit_move
 
 end module vec
