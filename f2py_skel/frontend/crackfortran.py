@@ -1440,19 +1440,19 @@ def analyzeline(m, case, line):
                         rl[l] = l
                     groupcache[groupcounter]['use'][name]['map'] = rl
             # TODO handle ONLY for intrinsics
-            elif mintrin:
-                # Intrinsic check
-                intrmm = mintrin.groupdict()
-                if 'use' not in groupcache[groupcounter]:
-                    groupcache[groupcounter]['use'] = {}
-                intrmm_ll = [x.strip() for x in intrmm['allintrin'].split(',')]
-                for l in intrmm_ll:
-                    if not isvalidintrinsicmod(l):
-                        outmess(
-                            'analyzeline: Not a valid intrinsic, must be one of ["iso_c_binding", "iso_fortran_env", "ieee_exceptions", "ieee_arithmetic", "ieee_features"]'
-                        )
-                    else:
-                        groupcache[groupcounter]['use'][l] = {}
+        elif mintrin:
+            # Intrinsic check
+            intrmm = mintrin.groupdict()
+            if 'use' not in groupcache[groupcounter]:
+                groupcache[groupcounter]['use'] = {}
+            intrmm_ll = [x.strip() for x in intrmm['allintrin'].split(',')]
+            for l in intrmm_ll:
+                if not isvalidintrinsicmod(l):
+                    outmess(
+                        'analyzeline: Not a valid intrinsic, must be one of ["iso_c_binding", "iso_fortran_env", "ieee_exceptions", "ieee_arithmetic", "ieee_features"]'
+                    )
+                else:
+                      groupcache[groupcounter]['use'][l] = {}
             else:
                 pass
         else:
