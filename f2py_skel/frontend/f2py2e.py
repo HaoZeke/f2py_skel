@@ -342,11 +342,10 @@ def callcrackfortran(files, options):
         else:
             with open(options['signsfile'], 'w') as f:
                 f.write(pyf)
-    if options["coutput"] is None:
-        for mod in postlist:
+    for mod in postlist:
+        if options["coutput"] is None:
             mod["coutput"] = "%smodule.c" % mod["name"]
-    else:
-        for mod in postlist:
+        else:
             mod["coutput"] = options["coutput"]
     if options["f2py_wrapper_output"] is None:
         for mod in postlist:
@@ -439,13 +438,16 @@ def run_main(comline_list):
                     isusedby[u] = []
                 isusedby[u].append(plist['name'])
     for plist in postlist:
-        if plist['block'] == 'python module' and '__user__' in plist['name']:
-            if plist['name'] in isusedby:
-                # if not quiet:
-                outmess(
-                    f'Skipping Makefile build for module "{plist["name"]}" '
-                    'which is used by {}\n'.format(
-                        ','.join(f'"{s}"' for s in isusedby[plist['name']])))
+        if (
+            plist['block'] == 'python module'
+            and '__user__' in plist['name']
+            and plist['name'] in isusedby
+        ):
+            # if not quiet:
+            outmess(
+                f'Skipping Makefile build for module "{plist["name"]}" '
+                'which is used by {}\n'.format(
+                    ','.join(f'"{s}"' for s in isusedby[plist['name']])))
     if 'signsfile' in options:
         if options['verbose'] > 1:
             outmess(
@@ -477,10 +479,7 @@ def filter_files(prefix, suffix, files, remove_prefix=None):
     """
     filtered, rest = [], []
     match = re.compile(prefix + r'.*' + suffix + r'\Z').match
-    if remove_prefix:
-        ind = len(prefix)
-    else:
-        ind = 0
+    ind = len(prefix) if remove_prefix else 0
     for file in [x.strip() for x in files]:
         if match(file):
             filtered.append(file[ind:])
@@ -490,8 +489,7 @@ def filter_files(prefix, suffix, files, remove_prefix=None):
 
 
 def get_prefix(module):
-    p = os.path.dirname(os.path.dirname(module.__file__))
-    return p
+    return os.path.dirname(os.path.dirname(module.__file__))
 
 
 def run_compile():
@@ -550,8 +548,8 @@ def run_compile():
     sys.argv = [_m for _m in sys.argv if _m not in fc_flags]
 
     del_list = []
+    v = '--fcompiler='
     for s in flib_flags:
-        v = '--fcompiler='
         if s[:len(v)] == v:
             from numpy.distutils import fcompiler
             fcompiler.load_all_fcompiler_classes()
@@ -687,9 +685,6 @@ def main():
         sys.argv.remove('--2e-numarray')
     elif '--2e-numpy' in sys.argv[1:]:
         sys.argv.remove('--2e-numpy')
-    else:
-        pass
-
     if '-c' in sys.argv[1:]:
         run_compile()
     else:
