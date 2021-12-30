@@ -58,6 +58,7 @@ c2py_map = {'double': 'float',
             'complex_double': 'complex',
             'complex_long_double': 'complex',          # forced casting
             'string': 'string',
+            'struct': 'struct',
             }
 c2capi_map = {'double': 'NPY_DOUBLE',
               'float': 'NPY_FLOAT',
@@ -74,8 +75,9 @@ c2capi_map = {'double': 'NPY_DOUBLE',
               'complex_float': 'NPY_CFLOAT',
               'complex_double': 'NPY_CDOUBLE',
               'complex_long_double': 'NPY_CDOUBLE',   # forced casting
-              'string': 'NPY_STRING'}
-
+              'string': 'NPY_STRING',
+              'struct': 'struct'
+              }
 # These new maps aren't used anywhere yet, but should be by default
 #  unless building numeric or numarray extensions.
 if using_newcore:
@@ -96,7 +98,8 @@ if using_newcore:
                   'complex_float': 'NPY_CFLOAT',
                   'complex_double': 'NPY_CDOUBLE',
                   'complex_long_double': 'NPY_CDOUBLE',
-                  'string':'NPY_STRING'
+                  'string':'NPY_STRING',
+                  'struct': 'struct'
                   }
 
 c2pycode_map = {'double': 'd',
@@ -114,7 +117,8 @@ c2pycode_map = {'double': 'd',
                 'complex_float': 'F',
                 'complex_double': 'D',
                 'complex_long_double': 'D',               # forced casting
-                'string': 'c'
+                'string': 'c',
+                'struct': 't'
                 }
 
 if using_newcore:
@@ -135,7 +139,9 @@ if using_newcore:
                     'complex_float': 'F',
                     'complex_double': 'D',
                     'complex_long_double': 'G',
-                    'string': 'S'}
+                    'string': 'S',
+                    'struct': 't'
+                    }
 
 c2buildvalue_map = {'double': 'd',
                     'float': 'f',
@@ -148,7 +154,9 @@ c2buildvalue_map = {'double': 'd',
                     'complex_float': 'N',
                     'complex_double': 'N',
                     'complex_long_double': 'N',
-                    'string': 'y'}
+                    'string': 'y',
+                    'struct': 't'
+                    }
 
 f2cmap_all = {'real': {'': 'float', '4': 'float', '8': 'double',
                        '12': 'long_double', '16': 'long_double'},
@@ -167,7 +175,8 @@ f2cmap_all = {'real': {'': 'float', '4': 'float', '8': 'double',
               'double complex': {'': 'complex_double'},
               'double precision': {'': 'double'},
               'byte': {'': 'char'},
-              'character': {'': 'string'}
+              'character': {'': 'string'},
+              'type': {'': 'struct'}
               }
 
 f2cmap_default = copy.deepcopy(f2cmap_all)
@@ -233,6 +242,7 @@ cformat_map = {'double': '%g',
                'complex_double': '(%g,%g)',
                'complex_long_double': '(%Lg,%Lg)',
                'string': '%s',
+               'struct': '%s',
                }
 
 # Auxiliary functions
@@ -599,6 +609,7 @@ def sign2map(a, var):
         ret['showvalueformat'] = '%s' % (cformat_map[ret['ctype']])
     if isstring(var):
         ret['varshowvalue'] = '#name#:slen(%s)=%%d %s=\\"%%s\\"' % (a, a)
+    # breakpoint()
     ret['pydocsign'], ret['pydocsignout'] = getpydocsign(a, var)
     if hasnote(var):
         ret['note'] = var['note']
