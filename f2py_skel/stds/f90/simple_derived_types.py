@@ -51,6 +51,15 @@ def buildhooks(pymod):
     typedef struct {{
     {''.join(defs)}
     }} {typedet['name']};
+    int try_pyarr_from_{typedet['name']}({typedet['name']} *xstruct, PyObject *x_capi){{
+            PyObject* dict;
+            PyArg_ParseTuple(x_capi, "O", &dict);
+            PyObject* vals = PyDict_Values(dict);
+            xstruct->x = PyFloat_AsDouble(PyList_GetItem(vals,0));
+            xstruct->y = PyFloat_AsDouble(PyList_GetItem(vals,1));
+            xstruct->z = PyFloat_AsDouble(PyList_GetItem(vals,2));
+            return 1;
+            }}
     """)
     ret = {'typedefs_derivedtypes': res}
     return ret

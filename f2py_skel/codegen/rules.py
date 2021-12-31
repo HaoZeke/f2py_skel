@@ -66,7 +66,7 @@ from f2py_skel.stds.auxfuncs import (
     iscomplexfunction, iscomplexfunction_warn, isdummyroutine, isexternal,
     isfunction, isfunction_wrap, isint1array, isintent_aux, isintent_c,
     isintent_callback, isintent_copy, isintent_hide, isintent_inout,
-    isintent_nothide, isintent_out, isintent_overwrite, islogical,
+    isintent_nothide, isintent_out, isintent_overwrite, islogical, isderivedtype,
     islong_complex, islong_double, islong_doublefunction, islong_long,
     islong_longfunction, ismoduleroutine, isoptional, isrequired, isscalar,
     issigned_long_longarray, isstring, isstringarray, isstringfunction,
@@ -747,6 +747,22 @@ arg_rules = [
         'docsignopt': '#varname#=#showinit#,',
         'docsignoptshort': '#varname#,',
         '_check': l_and(isintent_nothide, isoptional)
+    },
+    # Derived types
+    {
+        'frompyobj': ['f2py_success = try_pyarr_from_#ctype#(&#varname#, capi_args);'],
+        'decl': ['#ctype# #varname#;',
+                 'memset(&#varname#, 0, sizeof(#ctype#));'],
+        'argformat': ['O'],
+        'args_capi': [",&#varname#"],
+        'need':['typedefs_derivedtypes'],
+        'callfortran':["&#varname#"],
+        'returnformat': "{s:f,s:f,s:f}",
+        'return': [",\n",
+                   r'"x", #varname#.x,',"\n",
+                   r'"y", #varname#.y,',"\n",
+                   r'"z", #varname#.z',"\n",],
+        '_check':isderivedtype
     },
     # Docstring/BuildValue
     {
