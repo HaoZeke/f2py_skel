@@ -271,6 +271,9 @@ def getctype(var):
             errmess('getctype: function %s has no return value?!\n' % a)
     elif issubroutine(var):
         return ctype
+    elif isderivedtype(var):
+        ctype = var['typename']
+        return ctype
     elif 'typespec' in var and var['typespec'].lower() in f2cmap_all:
         typespec = var['typespec'].lower()
         f2cmap = f2cmap_all[typespec]

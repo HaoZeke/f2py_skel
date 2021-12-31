@@ -38,7 +38,7 @@ __all__ = [
     'islogicalfunction', 'islong_complex', 'islong_double',
     'islong_doublefunction', 'islong_long', 'islong_longfunction',
     'ismodule', 'ismoduleroutine', 'isoptional', 'isprivate', 'isrequired',
-    'isroutine', 'isscalar', 'issigned_long_longarray', 'isstring',
+    'isroutine', 'isderivedtype', 'isscalar', 'issigned_long_longarray', 'isstring',
     'isstringarray', 'isstringfunction', 'issubroutine',
     'issubroutine_wrap', 'isthreadsafe', 'isunsigned', 'isunsigned_char',
     'isunsigned_chararray', 'isunsigned_long_long',
@@ -95,9 +95,12 @@ def isarray(var):
     return 'dimension' in var and not isexternal(var)
 
 
-def isscalar(var):
-    return not (isarray(var) or isstring(var) or isexternal(var))
+def isderivedtype(var):
+    return var.get('typespec')=='type'
 
+
+def isscalar(var):
+    return not (isarray(var) or isstring(var) or isexternal(var) or isderivedtype(var))
 
 def iscomplex(var):
     return isscalar(var) and \
@@ -663,8 +666,6 @@ def getcallprotoargument(rout, cb_map={}):
                 pass
             elif isstring(var):
                 pass
-            elif ctype=="struct":
-                ctype = var['typename'] + '*'
             else:
                 ctype = ctype + '*'
             if isstring(var) or isarrayofstrings(var):
