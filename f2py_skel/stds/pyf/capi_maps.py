@@ -176,8 +176,15 @@ f2cmap_all = {'real': {'': 'float', '4': 'float', '8': 'double',
               'double precision': {'': 'double'},
               'byte': {'': 'char'},
               'character': {'': 'string'},
-              'type': {'': 'struct'}
+              'type': {'': 'struct'},
+              'c_double': {'': 'double'},
+              'c_float': {'': 'float'}
               }
+
+# isocbind = {
+#               'c_double': {'': 'double'},
+#               'c_float': {'': 'float'}
+# }
 
 f2cmap_default = copy.deepcopy(f2cmap_all)
 
@@ -609,7 +616,6 @@ def sign2map(a, var):
         ret['showvalueformat'] = '%s' % (cformat_map[ret['ctype']])
     if isstring(var):
         ret['varshowvalue'] = '#name#:slen(%s)=%%d %s=\\"%%s\\"' % (a, a)
-    # breakpoint()
     ret['pydocsign'], ret['pydocsignout'] = getpydocsign(a, var)
     if hasnote(var):
         ret['note'] = var['note']

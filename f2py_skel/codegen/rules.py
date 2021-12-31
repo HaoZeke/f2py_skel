@@ -1182,7 +1182,12 @@ check_rules = [
 
 def buildmodule(m, um):
     """
-    Return
+    Parameters
+    ----------
+    m : dictionary
+        This is the dictionary representing the cracked form of the module.
+    um : string
+        This is the name of the module.
     """
     outmess('    Building module "%s"...\n' % (m['name']))
     ret = {}

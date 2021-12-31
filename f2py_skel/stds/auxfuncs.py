@@ -483,14 +483,6 @@ isintent_dict = {isintent_in: 'INTENT_IN', isintent_inout: 'INTENT_INOUT',
 def isprivate(var):
     return 'attrspec' in var and 'private' in var['attrspec']
 
-# Intrinsic modules
-# References:
-# - J3/21-007: Draft Fortran 202x. https://j3-fortran.org/doc/year/21/21-007.pdf
-intrinsic_modules = ["iso_c_binding", "iso_fortran_env", "ieee_exceptions", "ieee_arithmetic", "ieee_features"]
-
-def isvalidintrinsicmod(modu):
-    return modu in intrinsic_modules
-
 def hasinitvalue(var):
     return '=' in var
 
@@ -862,3 +854,11 @@ def applyrules(rules, d, var={}):
             if ret[k] == []:
                 del ret[k]
     return ret
+
+# Intrinsic modules
+# References:
+# - J3/21-007: Draft Fortran 202x. https://j3-fortran.org/doc/year/21/21-007.pdf
+intrinsic_modules = ["iso_c_binding", "iso_fortran_env", "ieee_exceptions", "ieee_arithmetic", "ieee_features"]
+
+def isvalidintrinsicmod(modu):
+    return modu in intrinsic_modules
