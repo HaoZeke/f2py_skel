@@ -663,6 +663,8 @@ def getcallprotoargument(rout, cb_map={}):
                 pass
             elif isstring(var):
                 pass
+            elif ctype=="struct":
+                ctype = var['typename'] + '*'
             else:
                 ctype = ctype + '*'
             if isstring(var) or isarrayofstrings(var):
