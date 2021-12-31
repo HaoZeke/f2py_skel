@@ -81,6 +81,7 @@ from f2py_skel.codegen import cfuncs
 from f2py_skel.stds.f77 import common_rules
 from f2py_skel.stds.f90 import use_rules
 from f2py_skel.stds.f90 import f90mod_rules
+from f2py_skel.stds.f90 import simple_derived_types
 from f2py_skel.codegen import func2subr
 
 options = {}
@@ -94,6 +95,7 @@ for k in ['decl',
           'freemem',
           'userincludes',
           'includes0', 'includes', 'typedefs', 'typedefs_generated',
+          'typedefs_derivedtypes',
           'cppmacros', 'cfuncs', 'callbacks',
           'latexdoc',
           'restdoc',
@@ -137,6 +139,9 @@ static PyObject *#modulename#_module;
 
 """ + gentitle("See f2py2e/cfuncs.py: typedefs_generated") + """
 #typedefs_generated#
+
+""" + gentitle("See f2py2e/cfuncs.py: typedefs_derivedtypes") + """
+#typedefs_derivedtypes#
 
 """ + gentitle("See f2py2e/cfuncs.py: cppmacros") + """
 #cppmacros#
@@ -1236,6 +1241,11 @@ def buildmodule(m, um):
     ar = applyrules(mr, vrd)
     rd = dictappend(rd, ar)
 
+    # Construct F90 simple derived type support
+    mr = simple_derived_types.buildhooks(m)
+    ar = applyrules(mr, vrd)
+    rd = dictappend(rd, ar)
+
     for u in um:
         ar = use_rules.buildusevars(u, m['use'][u['name']])
         rd = dictappend(rd, ar)
@@ -1256,6 +1266,8 @@ def buildmodule(m, um):
                 c = cfuncs.typedefs[k]
             elif k in cfuncs.typedefs_generated:
                 c = cfuncs.typedefs_generated[k]
+            elif k in cfuncs.typedefs_derivedtypes:
+                c = cfuncs.typedefs_derivedtypes[k]
             elif k in cfuncs.cppmacros:
                 c = cfuncs.cppmacros[k]
             elif k in cfuncs.cfuncs:
