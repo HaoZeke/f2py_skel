@@ -118,7 +118,6 @@ c2pycode_map = {'double': 'd',
                 'complex_double': 'D',
                 'complex_long_double': 'D',               # forced casting
                 'string': 'c',
-                'struct': 't'
                 }
 
 if using_newcore:
@@ -140,7 +139,6 @@ if using_newcore:
                     'complex_double': 'D',
                     'complex_long_double': 'G',
                     'string': 'S',
-                    'struct': 't'
                     }
 
 c2buildvalue_map = {'double': 'd',
@@ -155,7 +153,6 @@ c2buildvalue_map = {'double': 'd',
                     'complex_double': 'N',
                     'complex_long_double': 'N',
                     'string': 'y',
-                    'struct': 't'
                     }
 
 f2cmap_all = {'real': {'': 'float', '4': 'float', '8': 'double',
