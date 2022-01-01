@@ -11,9 +11,14 @@ NO WARRANTY IS EXPRESSED OR IMPLIED.  USE AT YOUR OWN RISK.
 
 """
 
-cmapipy = {
+fcpyfunc = {
     'c_double': "PyFloat_AsDouble",
     'c_float': "PyFloat_AsDouble",
+}
+
+fcpycode = {
+    'c_float': 'f',
+    'c_double': 'd',
 }
 
 
@@ -42,8 +47,11 @@ def find_typeblocks(pymod):
 
 def buildhooks(pymod):
     res = []
+    dret = []
+    dretf = []
     for typedet in pymod.get('body')[0]['body'][0]['body']:
         defs = []
+        fkinds = []
         cstruct_var = []
         pyc_conv_fn = []
         for var in [
@@ -54,15 +62,27 @@ def buildhooks(pymod):
                 continue
             else:
                 vkind = typedet['vars'][var]['kindselector']['kind']
+                fkinds.append(vkind)
                 ckind = vkind.replace('c_', '')
                 vdef = f"{ckind} {var};"
                 cstruct_var.append(var)
-                pyc_conv_fn.append(cmapipy.get(vkind))
+                pyc_conv_fn.append(fcpyfunc.get(vkind))
                 defs.append(vdef)
         if len(defs) > 0:
             cline = []
             structname = typedet['name']
+            # XXX: Ugly hack, this forces
+            # capi_buildvalue = Py_BuildValue("{s:f,s:f,s:f}","x", array.x,
+            # "y", array.y,
+            # "z", array.z -> Note the missing ,
+            # );
             for i in range(len(defs)):
+                dretf.append(f"s:{fcpycode.get(fkinds[i])}")
+                # TODO: Stop harcoding array
+                dret.append(f"""{',' if i==0 else ''}\
+\t \"{cstruct_var[i]}\", array.{cstruct_var[i]}{'' if i==len(defs)-1 else ','}
+                """)
+                # TODO: Stop hardcoding vals
                 cline.append(
                     f"xstruct->{cstruct_var[i]} = {pyc_conv_fn[i]}(PyList_GetItem(vals, {i}));\n            "
                 )
@@ -78,5 +98,10 @@ def buildhooks(pymod):
             return 1;
             }}
     """)
-    ret = {'typedefs_derivedtypes': res}
+    # TODO: Document how these dictionary items get used in rules.py
+    ret = {
+        'typedefs_derivedtypes': res,
+        'derived_returnformat': f"{{{','.join(dretf)}}}",
+        'derived_return': dret
+    }
     return ret

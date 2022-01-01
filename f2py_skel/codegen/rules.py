@@ -757,11 +757,8 @@ arg_rules = [
         'args_capi': [",&#varname#"],
         'need':['typedefs_derivedtypes'],
         'callfortran':["&#varname#"],
-        'returnformat': "{s:f,s:f,s:f}",
-        'return': [",\n",
-                   r'"x", #varname#.x,',"\n",
-                   r'"y", #varname#.y,',"\n",
-                   r'"z", #varname#.z',"\n",],
+        'returnformat': "#derived_returnformat#",
+        'return': "#derived_return#",
         '_check':isderivedtype
     },
     # Docstring/BuildValue
