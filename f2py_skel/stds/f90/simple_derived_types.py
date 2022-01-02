@@ -175,10 +175,21 @@ def buildhooks(pymod):
     }
     return ret
 
+def get_dtargs(rout_vars):
+    dtargs = []
+    for var in rout_vars:
+        if rout_vars[var]['typespec']=='type':
+            dtargs.append(var)
+    return dtargs
+
+
 def routine_rules(rout):
     args, depargs = aux.getargs2(rout)
-    rettype = [x['typename'] for x in rout['vars'].values()  if ('inout' in x['intent']) or ('out' in x['intent'])][0]
-    inargs = [x for x in rout['vars'].values()  if ('inout' in x['intent']) or ('in' in x['intent'])]
+    rettype = [x['typename'] for x in rout['vars'].values() if (x['typespec']=='type') and (('inout' in x['intent']) or ('out' in x['intent']))][0]
+    dtargs = get_dtargs(rout['vars'])
+    callf = ','.join([f"&{x}" for x in dtargs])
+    if len(dtargs)<len(args):
+        callf = callf + ','
     for typedet in rout.get('parent_block').get('body'):
         if typedet['block']!='type':
             continue
@@ -189,6 +200,7 @@ def routine_rules(rout):
     ret = {
         'derived_returnformat': dretf,
         'derived_return': dret,
-        'derived_argformat': '|'.join(["O" for x in inargs])
+        'derived_argformat': ''.join(["O" for x in dtargs]),
+        'derived_callfortran': callf
     }
     return ret

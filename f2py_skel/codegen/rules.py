@@ -756,7 +756,7 @@ arg_rules = [
         'argformat': ['#derived_argformat#'],
         'args_capi': [",&#varname#"],
         'need':['typedefs_derivedtypes'],
-        'callfortran':["&#varname#"],
+        'callfortran':["#derived_callfortran#"],
         'returnformat': "#derived_returnformat#",
         'return': "#derived_return#",
         '_check':isderivedtype
