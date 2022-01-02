@@ -178,6 +178,7 @@ def buildhooks(pymod):
 def routine_rules(rout):
     args, depargs = aux.getargs2(rout)
     rettype = [x['typename'] for x in rout['vars'].values()  if ('inout' in x['intent']) or ('out' in x['intent'])][0]
+    inargs = [x for x in rout['vars'].values()  if ('inout' in x['intent']) or ('in' in x['intent'])]
     for typedet in rout.get('parent_block').get('body'):
         if typedet['block']!='type':
             continue
@@ -187,6 +188,7 @@ def routine_rules(rout):
             dretf, dret  = gen_typeret(sname, vardefs, depargs[0])
     ret = {
         'derived_returnformat': dretf,
-        'derived_return': dret
+        'derived_return': dret,
+        'derived_argformat': '|'.join(["O" for x in inargs])
     }
     return ret

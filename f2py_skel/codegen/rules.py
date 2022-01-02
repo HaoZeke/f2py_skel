@@ -753,7 +753,7 @@ arg_rules = [
         'frompyobj': ['f2py_success = try_pyarr_from_#ctype#(&#varname#, capi_args);'],
         'decl': ['#ctype# #varname#;',
                  'memset(&#varname#, 0, sizeof(#ctype#));'],
-        'argformat': ['O'],
+        'argformat': ['#derived_argformat#'],
         'args_capi': [",&#varname#"],
         'need':['typedefs_derivedtypes'],
         'callfortran':["&#varname#"],
