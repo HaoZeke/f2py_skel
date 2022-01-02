@@ -1414,6 +1414,12 @@ def buildapi(rout):
             ar = applyrules(r, vrd, rout)
             rd = dictappend(rd, ar)
 
+    # Derived type returns
+    if [True for x in var.values() if x['typespec']=='type'][0]:
+        mr = simple_derived_types.routine_rules(rout)
+        ar = applyrules(mr, vrd)
+        rd = dictappend(rd, ar)
+
     # Args
     nth, nthk = 0, 0
     savevrd = {}
