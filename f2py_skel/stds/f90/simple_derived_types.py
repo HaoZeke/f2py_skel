@@ -54,6 +54,16 @@ fcpyconv = [
                       ctype='double',
                       py_type='d',
                       py_conv='double_from_pyobj'),
+    FCPyConversionRow(fortran_isoc='c_long_double',
+                      ctype='long double',
+                      py_type='d', # No long double
+                      py_conv='long_double_from_pyobj'),
+    # Strings
+    # TODO: Fortran has special identifiers for NULL / CR etc.
+    FCPyConversionRow(fortran_isoc='c_char',
+                      ctype='char',
+                      py_type='z',
+                      py_conv='string_from_pyobj'),
 ]
 
 
@@ -84,7 +94,11 @@ def extract_typedat(typeblock):
     typevars = []
     structname = typeblock['name']
     for vname in typeblock['varnames']:
-        vfkind = typeblock['vars'][vname]['kindselector']['kind']
+        tbv = typeblock['vars'][vname]
+        if tbv['typespec'] == 'character':
+            vfkind = tbv['charselector']['kind']
+        else:
+            vfkind = tbv['kindselector']['kind']
         tvar = [x for x in fcpyconv if x.fortran_isoc == vfkind][0]
         typevars.append(tvar._replace(varname=vname))
     return structname, typevars
