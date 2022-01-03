@@ -65,6 +65,9 @@ fcpyconv = [
     FCPyConversionRow(fortran_isoc='c_char',
                       ctype='char',
                       py_type='z',
+    # TODO: This is broken for now, need to generate wrappers with ISO_Fortran_binding.h
+    # See: https://www.cdslab.org/recipes/programming/fortran-c-interoperation-string/fortran-c-interoperation-string
+    # https://community.intel.com/t5/Intel-Fortran-Compiler/passing-string-from-Fortran-to-C/td-p/1138766
                       py_conv='string_from_pyobj'),
 ]
 
