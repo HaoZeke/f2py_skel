@@ -115,16 +115,13 @@ def gen_typedecl(structname, tvars):
 
 
 def gen_typefunc(structname, tvars):
-    cline = [
-        f"{tv.py_conv}(&xstruct->{tv.varname}, PyList_GetItem(vals, {idx}), \"Error during conversion of {tv.varname} to {tv.ctype}\");\n\t "
-        for idx, tv in enumerate(tvars)
+    clines = [
+        f"{tv.py_conv}(&xstruct->{tv.varname}, PyDict_GetItemString(x_capi, \"{tv.varname}\"), \"Error during conversion of {tv.varname} to {tv.ctype}\");\n\t "
+        for tv in tvars
     ]
-    # TODO: Error out (or warn) if the wrong number of inputs were passed
-    # Currently, this function always returns if possible, even when the input "type" is not compatible
     rvfunc = f"""
-int {structname}_from_pyobj({structname} *xstruct, PyObject *x_capi){{
-   PyObject* vals = PyDict_Values(x_capi);
-   {''.join(cline)}
+static int {structname}_from_pyobj({structname} *xstruct, PyObject *x_capi){{
+   {''.join(clines)}
    return 1;
    }}
     """
