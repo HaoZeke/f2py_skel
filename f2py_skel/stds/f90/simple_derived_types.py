@@ -232,7 +232,8 @@ def arg_rules(rout):
     dstring = []
     pstring = []
     for arg in args:
-        ctype = cm.getctype(rout['vars'][arg])
+        rv = rout['vars'][arg]
+        ctype = cm.getctype(rv)
         if ctype not in alltypes:
             # These are processed for ParseTuple
             lstring.append([x.py_type for x in fcpyconv
@@ -245,6 +246,15 @@ def arg_rules(rout):
             pstring.append(f"    /* Processing variable {arg} */")
             pstring.append(
                 f"    f2py_success = {ctype}_from_pyobj(&{arg}, {arg}_capi);")
+            if aux.debugcapi(rv):
+                pstring.append(
+                    f"""\
+            fprintf(stderr, "debug-capi:{ctype} {arg}=:{rv['intent'][0]},{rv['typespec']}\\n");
+            fprintf(stderr, "debug-capi:{arg}=");
+            PyObject_Print({arg}_capi, stderr, 0);
+            fprintf(stderr, "\\n");\
+                   """
+                )
     fpyparse = f"""
     /* Parsing arguments */
     f2py_success = PyArg_ParseTuple(capi_args, \"{''.join(lstring)}\", {','.join(dstring)});

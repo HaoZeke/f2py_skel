@@ -634,7 +634,7 @@ aux_rules = [
     },
     {  # Common
         'frompyobj': ['    /* Processing auxiliary variable #varname# */',
-                      {debugcapi: '    fprintf(stderr,"#vardebuginfo#\\n");'}, ],
+                      {l_and(debugcapi, l_not(isderivedtype)): '    fprintf(stderr,"#vardebuginfo#\\n");'}, ],
         'cleanupfrompyobj': '    /* End of cleaning variable #varname# */',
         'need': typedef_need_dict,
     },
@@ -720,7 +720,7 @@ arg_rules = [
     },
     {  # Common
         'frompyobj': [{l_not(isderivedtype):'    /* Processing variable #varname# */'},
-                      {debugcapi: '    fprintf(stderr,"#vardebuginfo#\\n");'}, ],
+                      {l_and(debugcapi, l_not(isderivedtype)): '    fprintf(stderr,"#vardebuginfo#\\n");'}, ],
         'cleanupfrompyobj': '    /* End of cleaning variable #varname# */',
         '_depend': '',
         'need': typedef_need_dict,
