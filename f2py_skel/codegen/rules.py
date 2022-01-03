@@ -1150,12 +1150,13 @@ if (#varname#_cb.capi==Py_None) {
         'decl': ['    #ctype# #varname#;',
                  '    memset(&#varname#, 0, sizeof(#ctype#));',
                  '    PyObject *#varname#_capi = Py_None;'],
-        'argformat': ['#derived_argformat#'],
-        'args_capi': [",&#varname#"],
+        'args_capi': {isrequired: ',&#varname#_capi'},
+        'keys_capi': {isoptional: ',&#varname#_capi'},
+        'argformat': ['##varname#_format#'],
+        'callfortran':["##varname#_dcf#"],
+        'returnformat': "##varname#_drf#",
+        'return': "##varname#_ret#",
         'need':['typedefs_derivedtypes'],
-        'callfortran':["#derived_callfortran#"],
-        'returnformat': "#derived_returnformat#",
-        'return': "#derived_return#",
         '_check':isderivedtype
     }
 ]

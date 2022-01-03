@@ -11,6 +11,7 @@ NO WARRANTY IS EXPRESSED OR IMPLIED.  USE AT YOUR OWN RISK.
 
 """
 
+import functools as fn
 from collections import namedtuple
 from f2py_skel.stds import auxfuncs as aux
 from f2py_skel.stds.pyf import capi_maps as cm
@@ -191,27 +192,32 @@ def get_dtargs(rout_vars):
 
 def routine_rules(rout):
     args, depargs = aux.getargs2(rout)
+    larg = []
+    for idx, arg in enumerate(args):
+        larg.append(arg_routines(rout, idx))
+    return fn.reduce(lambda a,b: dict(a, **b), filter(None,larg))
+
+# TODO: Refactor, this is not Pythonic
+def arg_routines(rout, idx):
+    args, _ = aux.getargs2(rout)
+    if aux.isscalar(rout['vars'][args[idx]]):
+        return
     rettype = [
         x['typename'] for x in rout['vars'].values()
         if (x['typespec'] == 'type') and (
             ('inout' in x['intent']) or ('out' in x['intent']))
     ][0]
-    dtargs = get_dtargs(rout['vars'])
-    callf = ','.join([f"&{x}" for x in dtargs])
-    if len(dtargs) < len(args):
-        callf = callf + ','
     for typedet in rout.get('parent_block').get('body'):
         if typedet['block'] != 'type':
             continue
         if typedet['name'] == rettype:
             sname, vardefs = extract_typedat(typedet)
-            # TODO: Determine which of the dependent arguments are used for the return
-            dretf, dret = gen_typeret(sname, vardefs, depargs[0])
+            dretf, dret = gen_typeret(sname, vardefs, args[idx])
     return {
-        'derived_returnformat': dretf,
-        'derived_return': dret,
-        'derived_argformat': ''.join(["O" for x in dtargs]),
-        'derived_callfortran': callf
+        f'{args[idx]}_drf': dretf,
+        f'{args[idx]}_ret': dret,
+        f'{args[idx]}_format': "O",
+        f'{args[idx]}_dcf': f"&{args[idx]},",
     }
 
 
