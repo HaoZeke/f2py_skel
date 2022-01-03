@@ -191,10 +191,8 @@ def get_dtargs(rout_vars):
 
 
 def routine_rules(rout):
-    args, depargs = aux.getargs2(rout)
-    larg = []
-    for idx, arg in enumerate(args):
-        larg.append(arg_routines(rout, idx))
+    args, _ = aux.getargs2(rout)
+    larg = [arg_routines(rout, idx) for idx, arg in enumerate(args)]
     return fn.reduce(lambda a,b: dict(a, **b), filter(None,larg))
 
 # TODO: Refactor, this is not Pythonic
