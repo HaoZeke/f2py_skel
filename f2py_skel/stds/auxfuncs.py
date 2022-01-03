@@ -35,7 +35,7 @@ __all__ = [
     'isintent_c', 'isintent_callback', 'isintent_copy', 'isintent_dict',
     'isintent_hide', 'isintent_in', 'isintent_inout', 'isintent_inplace',
     'isintent_nothide', 'isintent_out', 'isintent_overwrite', 'islogical',
-    'islogicalfunction', 'islong_complex', 'islong_double', 'isnotderivedtype',
+    'islogicalfunction', 'islong_complex', 'islong_double',
     'islong_doublefunction', 'islong_long', 'islong_longfunction',
     'ismodule', 'ismoduleroutine', 'isoptional', 'isprivate', 'isrequired',
     'isroutine', 'isderivedtype', 'isscalar', 'issigned_long_longarray', 'isstring',
@@ -97,9 +97,6 @@ def isarray(var):
 
 def isderivedtype(var):
     return var.get('typespec')=='type'
-
-def isnotderivedtype(var):
-    return not isderivedtype(var)
 
 
 def isscalar(var):

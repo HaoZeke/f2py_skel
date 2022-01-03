@@ -62,7 +62,7 @@ numpy_version = __version__.version
 from f2py_skel.stds.auxfuncs import (
     applyrules, debugcapi, dictappend, errmess, gentitle, getargs2,
     hascallstatement, hasexternals, hasinitvalue, hasnote, hasresultnote,
-    isarray, isarrayofstrings, iscomplex, iscomplexarray, isnotderivedtype,
+    isarray, isarrayofstrings, iscomplex, iscomplexarray,
     iscomplexfunction, iscomplexfunction_warn, isdummyroutine, isexternal,
     isfunction, isfunction_wrap, isint1array, isintent_aux, isintent_c,
     isintent_callback, isintent_copy, isintent_hide, isintent_inout,
@@ -558,7 +558,7 @@ rout_rules = [
                  {iscomplexfunction: 'pyobj_from_#ctype#1'},
                  {islong_longfunction: 'long_long'},
                  {islong_doublefunction: 'long_double'}],
-        'returnformat': {l_not(isintent_hide): '#rformat#'},
+        'returnformat': {l_and(l_not(isintent_hide), l_not(isderivedtype)): '#rformat#'},
         'return': {iscomplexfunction: ',#name#_return_value_capi',
                    l_not(l_or(iscomplexfunction, isintent_hide)): ',#name#_return_value'},
         '_check': l_and(isfunction, l_not(isstringfunction), l_not(isfunction_wrap))
@@ -719,7 +719,7 @@ arg_rules = [
         'separatorsfor': sepdict
     },
     {  # Common
-        'frompyobj': [{isnotderivedtype:'    /* Processing variable #varname# */'},
+        'frompyobj': [{l_not(isderivedtype):'    /* Processing variable #varname# */'},
                       {debugcapi: '    fprintf(stderr,"#vardebuginfo#\\n");'}, ],
         'cleanupfrompyobj': '    /* End of cleaning variable #varname# */',
         '_depend': '',
