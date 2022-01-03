@@ -54,10 +54,11 @@ fcpyconv = [
                       ctype='double',
                       py_type='d',
                       py_conv='double_from_pyobj'),
-    FCPyConversionRow(fortran_isoc='c_long_double',
-                      ctype='long double',
-                      py_type='d', # No long double
-                      py_conv='long_double_from_pyobj'),
+    FCPyConversionRow(
+        fortran_isoc='c_long_double',
+        ctype='long double',
+        py_type='d',  # No long double
+        py_conv='long_double_from_pyobj'),
     # Strings
     # TODO: Fortran has special identifiers for NULL / CR etc.
     FCPyConversionRow(fortran_isoc='c_char',
@@ -114,6 +115,7 @@ def gen_typedecl(structname, tvars):
     return tdecl
 
 
+# TODO: Generalize to have an extract_from_pydict in need
 def gen_typefunc(structname, tvars):
     clines = [
         f"{tv.py_conv}(&xstruct->{tv.varname}, PyDict_GetItemString(x_capi, \"{tv.varname}\"), \"Error during conversion of {tv.varname} to {tv.ctype}\");\n\t "
@@ -155,8 +157,7 @@ def gen_typeret(structname, tvars, vname):
         f"""{',' if idx==0 else ''}\
 \t \"{tv.varname}\", {vname}.{tv.varname}\
 {'' if idx==len(tvars)-1 else ','}
-        """
-        for idx, tv in enumerate(tvars)
+        """ for idx, tv in enumerate(tvars)
     ]
     return retvardecl, ''.join(dretlines)
 
@@ -213,6 +214,7 @@ def routine_rules(rout):
         'derived_callfortran': callf
     }
 
+
 def arg_rules(rout):
     args, depargs = aux.getargs2(rout)
     alltypes = [cm.getctype(rout['vars'][x]) for x in get_dtargs(rout['vars'])]
@@ -223,19 +225,19 @@ def arg_rules(rout):
         ctype = cm.getctype(rout['vars'][arg])
         if ctype not in alltypes:
             # These are processed for ParseTuple
-            lstring.append([x.py_type for x in fcpyconv if x.ctype==ctype][0])
+            lstring.append([x.py_type for x in fcpyconv
+                            if x.ctype == ctype][0])
             dstring.append(f"&{arg}")
         else:
             lstring.append('O')
             dstring.append(f"&{arg}_capi")
             # Non derived types are processed in rules
             pstring.append(f"    /* Processing variable {arg} */")
-            pstring.append(f"    f2py_success = {ctype}_from_pyobj(&{arg}, {arg}_capi);")
+            pstring.append(
+                f"    f2py_success = {ctype}_from_pyobj(&{arg}, {arg}_capi);")
     fpyparse = f"""
     /* Parsing arguments */
     f2py_success = PyArg_ParseTuple(capi_args, \"{''.join(lstring)}\", {','.join(dstring)});
    """
     fpyobj = '\n'.join([fpyparse, '\n'.join(pstring)])
-    return {
-        'frompyobj': fpyobj
-    }
+    return {'frompyobj': fpyobj}
