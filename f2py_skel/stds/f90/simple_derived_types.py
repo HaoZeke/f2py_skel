@@ -13,6 +13,7 @@ NO WARRANTY IS EXPRESSED OR IMPLIED.  USE AT YOUR OWN RISK.
 
 from collections import namedtuple
 from f2py_skel.stds import auxfuncs as aux
+from f2py_skel.stds.pyf import capi_maps as cm
 
 FCPyConversionRow = namedtuple(
     'FCPyConversionRow',
@@ -107,10 +108,8 @@ def gen_typefunc(structname, tvars):
     # TODO: Error out (or warn) if the wrong number of inputs were passed
     # Currently, this function always returns if possible, even when the input "type" is not compatible
     rvfunc = f"""
-int try_pyarr_from_{structname}({structname} *xstruct, PyObject *x_capi){{
-   PyObject* dict;
-   PyArg_ParseTuple(x_capi, "O", &dict);
-   PyObject* vals = PyDict_Values(dict);
+int {structname}_from_pyobj({structname} *xstruct, PyObject *x_capi){{
+   PyObject* vals = PyDict_Values(x_capi);
    {''.join(cline)}
    return 1;
    }}
@@ -189,6 +188,7 @@ def routine_rules(rout):
     callf = ','.join([f"&{x}" for x in dtargs])
     if len(dtargs) < len(args):
         callf = callf + ','
+    alltypes = [cm.getctype(rout['vars'][x]) for x in dtargs]
     for typedet in rout.get('parent_block').get('body'):
         if typedet['block'] != 'type':
             continue
@@ -196,7 +196,19 @@ def routine_rules(rout):
             sname, vardefs = extract_typedat(typedet)
             # TODO: Determine which of the dependent arguments are used for the return
             dretf, dret = gen_typeret(sname, vardefs, depargs[0])
+    lstring = []
+    dstring = []
+    for arg in args:
+        ctype = cm.getctype(rout['vars'][arg])
+        if ctype not in alltypes:
+            lstring.append([x.py_type for x in fcpyconv if x.ctype==ctype][0])
+            dstring.append(f"&{arg}")
+        else:
+            lstring.append('O')
+            dstring.append(f"&{arg}_capi")
+    fpyobj = f"f2py_success = PyArg_ParseTuple(capi_args, \"{''.join(lstring)}\", {','.join(dstring)});"
     return {
+        'frompyobj': fpyobj,
         'derived_returnformat': dretf,
         'derived_return': dret,
         'derived_argformat': ''.join(["O" for x in dtargs]),

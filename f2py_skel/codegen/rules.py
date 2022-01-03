@@ -753,9 +753,10 @@ arg_rules = [
     },
     # Derived types
     {
-        'frompyobj': ['f2py_success = try_pyarr_from_#ctype#(&#varname#, capi_args);'],
+        'frompyobj': ['f2py_success = #ctype#_from_pyobj(&#varname#, #varname#_capi);'],
         'decl': ['#ctype# #varname#;',
-                 'memset(&#varname#, 0, sizeof(#ctype#));'],
+                 'memset(&#varname#, 0, sizeof(#ctype#));',
+                 'PyObject *#varname#_capi = Py_None;'],
         'argformat': ['#derived_argformat#'],
         'args_capi': [",&#varname#"],
         'need':['typedefs_derivedtypes'],
