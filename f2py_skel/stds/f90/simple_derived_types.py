@@ -14,7 +14,10 @@ NO WARRANTY IS EXPRESSED OR IMPLIED.  USE AT YOUR OWN RISK.
 from collections import namedtuple
 from f2py_skel.stds import auxfuncs as aux
 
-FCPyConversionRow = namedtuple('FCPyConversionRow', ['fortran_isoc', 'ctype', 'py_type', 'py_conv', 'varname'], defaults = [None])
+FCPyConversionRow = namedtuple(
+    'FCPyConversionRow',
+    ['fortran_isoc', 'ctype', 'py_type', 'py_conv', 'varname'],
+    defaults=[None])
 
 # These are sourced from:
 # ISO_C_BINDINGS: https://gcc.gnu.org/onlinedocs/gfortran/ISO_005fC_005fBINDING.html
@@ -23,34 +26,35 @@ FCPyConversionRow = namedtuple('FCPyConversionRow', ['fortran_isoc', 'ctype', 'p
 fcpyconv = [
     # Integers
     # TODO: Use cfuncs.py versions
-    FCPyConversionRow(fortran_isoc = 'c_int',
-                      ctype = 'int',
-                      py_type = 'i',
-                      py_conv = 'PyLong_FromLong'),
-    FCPyConversionRow(fortran_isoc = 'c_short',
-                      ctype = 'short int',
-                      py_type = 'h',
-                      py_conv = 'PyLong_FromLong'),
-    FCPyConversionRow(fortran_isoc = 'c_long',
-                      ctype = 'long int',
-                      py_type = 'l',
-                      py_conv = 'PyLong_FromLong'),
-    FCPyConversionRow(fortran_isoc = 'c_long_long',
-                      ctype = 'long long int',
-                      py_type = 'L',
-                      py_conv = 'PyLong_FromLongLong'),
+    FCPyConversionRow(fortran_isoc='c_int',
+                      ctype='int',
+                      py_type='i',
+                      py_conv='PyLong_FromLong'),
+    FCPyConversionRow(fortran_isoc='c_short',
+                      ctype='short int',
+                      py_type='h',
+                      py_conv='PyLong_FromLong'),
+    FCPyConversionRow(fortran_isoc='c_long',
+                      ctype='long int',
+                      py_type='l',
+                      py_conv='PyLong_FromLong'),
+    FCPyConversionRow(fortran_isoc='c_long_long',
+                      ctype='long long int',
+                      py_type='L',
+                      py_conv='PyLong_FromLongLong'),
     # TODO: Add int6 and other sizes
     # Evidently ISO_C_BINDINGs do not have unsigned integers
     # Floats
-    FCPyConversionRow(fortran_isoc = 'c_float',
-                      ctype = 'float',
-                      py_type = 'f',
-                      py_conv = 'float_from_pyobj'),
-    FCPyConversionRow(fortran_isoc = 'c_double',
-                      ctype = 'double',
-                      py_type = 'd',
-                      py_conv = 'double_from_pyobj'),
+    FCPyConversionRow(fortran_isoc='c_float',
+                      ctype='float',
+                      py_type='f',
+                      py_conv='float_from_pyobj'),
+    FCPyConversionRow(fortran_isoc='c_double',
+                      ctype='double',
+                      py_type='d',
+                      py_conv='double_from_pyobj'),
 ]
+
 
 def find_typeblocks(pymod):
     """Return a list of type definitions
@@ -73,13 +77,6 @@ def find_typeblocks(pymod):
             ret.append(blockdef)
     return ret
 
-def recursive_lookup(k, d):
-    if k in d: return d[k]
-    for v in d.values():
-        if isinstance(v, dict):
-            a = recursive_lookup(k, v)
-            if a is not None: return a
-    return None
 
 def extract_typedat(typeblock):
     assert typeblock['block'] == 'type'
@@ -88,8 +85,9 @@ def extract_typedat(typeblock):
     for vname in typeblock['varnames']:
         vfkind = typeblock['vars'][vname]['kindselector']['kind']
         tvar = [x for x in fcpyconv if x.fortran_isoc == vfkind][0]
-        typevars.append(tvar._replace(varname = vname))
+        typevars.append(tvar._replace(varname=vname))
     return structname, typevars
+
 
 def gen_typedecl(structname, tvars):
     vdefs = [''.join(f"{x.ctype} {x.varname};") for x in tvars]
@@ -100,10 +98,13 @@ def gen_typedecl(structname, tvars):
     """
     return tdecl
 
+
 def gen_typefunc(structname, tvars):
     cline = []
-    for idx,tv in enumerate(tvars):
-        cline.append(f"{tv.py_conv}(&xstruct->{tv.varname}, PyList_GetItem(vals, {idx}), \"Error during conversion of {tv.varname} to {tv.ctype}\");\n\t ")
+    for idx, tv in enumerate(tvars):
+        cline.append(
+            f"{tv.py_conv}(&xstruct->{tv.varname}, PyList_GetItem(vals, {idx}), \"Error during conversion of {tv.varname} to {tv.ctype}\");\n\t "
+        )
         # cline.append(f" = {tv.py_conv}(PyList_GetItem(vals, {idx}));\n\t\t")
     # TODO: Error out (or warn) if the wrong number of inputs were passed
     # Currently, this function always returns if possible, even when the input "type" is not compatible
@@ -117,6 +118,7 @@ int try_pyarr_from_{structname}({structname} *xstruct, PyObject *x_capi){{
    }}
     """
     return rvfunc
+
 
 def gen_typeret(structname, tvars, vname):
     """
@@ -137,7 +139,7 @@ def gen_typeret(structname, tvars, vname):
     """
     retvardecl = f"{{{','.join([f's:{x.py_type}' for x in tvars])}}}"
     dretlines = []
-    for idx,tv in enumerate(tvars):
+    for idx, tv in enumerate(tvars):
         # XXX: Ugly hack, this forces
         # capi_buildvalue = Py_BuildValue("#returnformat#","x", array.x,
         # "y", array.y,
@@ -149,6 +151,7 @@ def gen_typeret(structname, tvars, vname):
         """)
     return retvardecl, ''.join(dretlines)
 
+
 def buildhooks(pymod):
     # One structure and function for each derived type
     tdefs = []
@@ -158,7 +161,7 @@ def buildhooks(pymod):
     for pym in pymod.get('body'):
         for blk in pym['body']:
             for typedet in blk['body']:
-                if typedet['block']!='type':
+                if typedet['block'] != 'type':
                     continue
                 sname, vardefs = extract_typedat(typedet)
                 needs.append([x.py_conv for x in vardefs])
@@ -172,28 +175,33 @@ def buildhooks(pymod):
     }
     return ret
 
+
 def get_dtargs(rout_vars):
     dtargs = []
     for var in rout_vars:
-        if rout_vars[var]['typespec']=='type':
+        if rout_vars[var]['typespec'] == 'type':
             dtargs.append(var)
     return dtargs
 
 
 def routine_rules(rout):
     args, depargs = aux.getargs2(rout)
-    rettype = [x['typename'] for x in rout['vars'].values() if (x['typespec']=='type') and (('inout' in x['intent']) or ('out' in x['intent']))][0]
+    rettype = [
+        x['typename'] for x in rout['vars'].values()
+        if (x['typespec'] == 'type') and (
+            ('inout' in x['intent']) or ('out' in x['intent']))
+    ][0]
     dtargs = get_dtargs(rout['vars'])
     callf = ','.join([f"&{x}" for x in dtargs])
-    if len(dtargs)<len(args):
+    if len(dtargs) < len(args):
         callf = callf + ','
     for typedet in rout.get('parent_block').get('body'):
-        if typedet['block']!='type':
+        if typedet['block'] != 'type':
             continue
-        if typedet['name']==rettype:
+        if typedet['name'] == rettype:
             sname, vardefs = extract_typedat(typedet)
             # TODO: Determine which of the dependent arguments are used for the return
-            dretf, dret  = gen_typeret(sname, vardefs, depargs[0])
+            dretf, dret = gen_typeret(sname, vardefs, depargs[0])
     ret = {
         'derived_returnformat': dretf,
         'derived_return': dret,
