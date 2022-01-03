@@ -100,12 +100,10 @@ def gen_typedecl(structname, tvars):
 
 
 def gen_typefunc(structname, tvars):
-    cline = []
-    for idx, tv in enumerate(tvars):
-        cline.append(
-            f"{tv.py_conv}(&xstruct->{tv.varname}, PyList_GetItem(vals, {idx}), \"Error during conversion of {tv.varname} to {tv.ctype}\");\n\t "
-        )
-        # cline.append(f" = {tv.py_conv}(PyList_GetItem(vals, {idx}));\n\t\t")
+    cline = [
+        f"{tv.py_conv}(&xstruct->{tv.varname}, PyList_GetItem(vals, {idx}), \"Error during conversion of {tv.varname} to {tv.ctype}\");\n\t "
+        for idx, tv in enumerate(tvars)
+    ]
     # TODO: Error out (or warn) if the wrong number of inputs were passed
     # Currently, this function always returns if possible, even when the input "type" is not compatible
     rvfunc = f"""
@@ -138,17 +136,18 @@ def gen_typeret(structname, tvars, vname):
          The name of the variable in the subprogram
     """
     retvardecl = f"{{{','.join([f's:{x.py_type}' for x in tvars])}}}"
-    dretlines = []
-    for idx, tv in enumerate(tvars):
-        # XXX: Ugly hack, this forces
-        # capi_buildvalue = Py_BuildValue("#returnformat#","x", array.x,
-        # "y", array.y,
-        # "z", array.z # -> Note the missing ,
-        # );
-        dretlines.append(f"""{',' if idx==0 else ''}\
+    # XXX: Ugly hack, this forces
+    # capi_buildvalue = Py_BuildValue("#returnformat#","x", array.x,
+    # "y", array.y,
+    # "z", array.z # -> Note the missing ,
+    # );
+    dretlines = [
+        f"""{',' if idx==0 else ''}\
 \t \"{tv.varname}\", {vname}.{tv.varname}\
 {'' if idx==len(tvars)-1 else ','}
-        """)
+        """
+        for idx, tv in enumerate(tvars)
+    ]
     return retvardecl, ''.join(dretlines)
 
 
@@ -168,20 +167,15 @@ def buildhooks(pymod):
                 tdefs.append('\n'.join([gen_typedecl(sname, vardefs)]))
                 tfuncs.append('\n'.join([gen_typefunc(sname, vardefs)]))
     # TODO: Document how these dictionary items get used in rules.py
-    ret = {
+    return {
         'typedefs_derivedtypedefs': tdefs,
         'typedefs_derivedtypefuncs': tfuncs,
         'need': needs
     }
-    return ret
 
 
 def get_dtargs(rout_vars):
-    dtargs = []
-    for var in rout_vars:
-        if rout_vars[var]['typespec'] == 'type':
-            dtargs.append(var)
-    return dtargs
+    return [var for var in rout_vars if rout_vars[var]['typespec'] == 'type']
 
 
 def routine_rules(rout):
@@ -202,10 +196,9 @@ def routine_rules(rout):
             sname, vardefs = extract_typedat(typedet)
             # TODO: Determine which of the dependent arguments are used for the return
             dretf, dret = gen_typeret(sname, vardefs, depargs[0])
-    ret = {
+    return {
         'derived_returnformat': dretf,
         'derived_return': dret,
         'derived_argformat': ''.join(["O" for x in dtargs]),
         'derived_callfortran': callf
     }
-    return ret
