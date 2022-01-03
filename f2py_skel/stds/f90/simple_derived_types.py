@@ -188,7 +188,6 @@ def routine_rules(rout):
     callf = ','.join([f"&{x}" for x in dtargs])
     if len(dtargs) < len(args):
         callf = callf + ','
-    alltypes = [cm.getctype(rout['vars'][x]) for x in dtargs]
     for typedet in rout.get('parent_block').get('body'):
         if typedet['block'] != 'type':
             continue
@@ -196,21 +195,36 @@ def routine_rules(rout):
             sname, vardefs = extract_typedat(typedet)
             # TODO: Determine which of the dependent arguments are used for the return
             dretf, dret = gen_typeret(sname, vardefs, depargs[0])
+    return {
+        'derived_returnformat': dretf,
+        'derived_return': dret,
+        'derived_argformat': ''.join(["O" for x in dtargs]),
+        'derived_callfortran': callf
+    }
+
+def arg_rules(rout):
+    args, depargs = aux.getargs2(rout)
+    alltypes = [cm.getctype(rout['vars'][x]) for x in get_dtargs(rout['vars'])]
     lstring = []
     dstring = []
+    pstring = []
     for arg in args:
         ctype = cm.getctype(rout['vars'][arg])
         if ctype not in alltypes:
+            # These are processed for ParseTuple
             lstring.append([x.py_type for x in fcpyconv if x.ctype==ctype][0])
             dstring.append(f"&{arg}")
         else:
             lstring.append('O')
             dstring.append(f"&{arg}_capi")
-    fpyobj = f"f2py_success = PyArg_ParseTuple(capi_args, \"{''.join(lstring)}\", {','.join(dstring)});"
+            # Non derived types are processed in rules
+            pstring.append(f"    /* Processing variable {arg} */")
+            pstring.append(f"    f2py_success = {ctype}_from_pyobj(&{arg}, {arg}_capi);")
+    fpyparse = f"""
+    /* Parsing arguments */
+    f2py_success = PyArg_ParseTuple(capi_args, \"{''.join(lstring)}\", {','.join(dstring)});
+   """
+    fpyobj = '\n'.join([fpyparse, '\n'.join(pstring)])
     return {
-        'frompyobj': fpyobj,
-        'derived_returnformat': dretf,
-        'derived_return': dret,
-        'derived_argformat': ''.join(["O" for x in dtargs]),
-        'derived_callfortran': callf
+        'frompyobj': fpyobj
     }

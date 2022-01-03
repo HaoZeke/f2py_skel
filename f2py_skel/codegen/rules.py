@@ -62,7 +62,7 @@ numpy_version = __version__.version
 from f2py_skel.stds.auxfuncs import (
     applyrules, debugcapi, dictappend, errmess, gentitle, getargs2,
     hascallstatement, hasexternals, hasinitvalue, hasnote, hasresultnote,
-    isarray, isarrayofstrings, iscomplex, iscomplexarray,
+    isarray, isarrayofstrings, iscomplex, iscomplexarray, isnotderivedtype,
     iscomplexfunction, iscomplexfunction_warn, isdummyroutine, isexternal,
     isfunction, isfunction_wrap, isint1array, isintent_aux, isintent_c,
     isintent_callback, isintent_copy, isintent_hide, isintent_inout,
@@ -719,7 +719,7 @@ arg_rules = [
         'separatorsfor': sepdict
     },
     {  # Common
-        'frompyobj': ['    /* Processing variable #varname# */',
+        'frompyobj': [{isnotderivedtype:'    /* Processing variable #varname# */'},
                       {debugcapi: '    fprintf(stderr,"#vardebuginfo#\\n");'}, ],
         'cleanupfrompyobj': '    /* End of cleaning variable #varname# */',
         '_depend': '',
@@ -750,20 +750,6 @@ arg_rules = [
         'docsignopt': '#varname#=#showinit#,',
         'docsignoptshort': '#varname#,',
         '_check': l_and(isintent_nothide, isoptional)
-    },
-    # Derived types
-    {
-        'frompyobj': ['f2py_success = #ctype#_from_pyobj(&#varname#, #varname#_capi);'],
-        'decl': ['#ctype# #varname#;',
-                 'memset(&#varname#, 0, sizeof(#ctype#));',
-                 'PyObject *#varname#_capi = Py_None;'],
-        'argformat': ['#derived_argformat#'],
-        'args_capi': [",&#varname#"],
-        'need':['typedefs_derivedtypes'],
-        'callfortran':["#derived_callfortran#"],
-        'returnformat': "#derived_returnformat#",
-        'return': "#derived_return#",
-        '_check':isderivedtype
     },
     # Docstring/BuildValue
     {
@@ -1158,6 +1144,19 @@ if (#varname#_cb.capi==Py_None) {
         'callfortranappend': {isarrayofstrings: 'flen(#varname#),'},
         'need': 'string',
         '_check': isstringarray
+    },
+    # Derived types
+    {
+        'decl': ['    #ctype# #varname#;',
+                 '    memset(&#varname#, 0, sizeof(#ctype#));',
+                 '    PyObject *#varname#_capi = Py_None;'],
+        'argformat': ['#derived_argformat#'],
+        'args_capi': [",&#varname#"],
+        'need':['typedefs_derivedtypes'],
+        'callfortran':["#derived_callfortran#"],
+        'returnformat': "#derived_returnformat#",
+        'return': "#derived_return#",
+        '_check':isderivedtype
     }
 ]
 
@@ -1423,6 +1422,9 @@ def buildapi(rout):
         mr = simple_derived_types.routine_rules(rout)
         ar = applyrules(mr, vrd)
         rd = dictappend(rd, ar)
+        marg = simple_derived_types.arg_rules(rout)
+        ar = applyrules(marg, vrd)
+        rd = dictappend(rd, ar)
 
     # Args
     nth, nthk = 0, 0
@@ -1470,10 +1472,13 @@ def buildapi(rout):
                 vrd['check'] = c
                 ar = applyrules(check_rules, vrd, var[a])
                 rd = dictappend(rd, ar)
+
+    # Cleanup
     if isinstance(rd['cleanupfrompyobj'], list):
         rd['cleanupfrompyobj'].reverse()
     if isinstance(rd['closepyobjfrom'], list):
         rd['closepyobjfrom'].reverse()
+    # Documentation
     rd['docsignature'] = stripcomma(replace('#docsign##docsignopt##docsignxa#',
                                             {'docsign': rd['docsign'],
                                              'docsignopt': rd['docsignopt'],
