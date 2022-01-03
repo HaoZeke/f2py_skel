@@ -14,16 +14,6 @@ NO WARRANTY IS EXPRESSED OR IMPLIED.  USE AT YOUR OWN RISK.
 from collections import namedtuple
 from f2py_skel.stds import auxfuncs as aux
 
-fcpyfunc = {
-    'c_double': "PyFloat_AsDouble",
-    'c_float': "PyFloat_AsDouble",
-}
-
-fcpycode = {
-    'c_float': 'f',
-    'c_double': 'd',
-}
-
 FCPyConversionRow = namedtuple('FCPyConversionRow', ['fortran_isoc', 'ctype', 'py_type', 'py_conv', 'varname'], defaults = [None])
 
 # These are sourced from:
@@ -32,6 +22,7 @@ FCPyConversionRow = namedtuple('FCPyConversionRow', ['fortran_isoc', 'ctype', 'p
 # Py_Conv: https://docs.python.org/3/c-api/
 fcpyconv = [
     # Integers
+    # TODO: Use cfuncs.py versions
     FCPyConversionRow(fortran_isoc = 'c_int',
                       ctype = 'int',
                       py_type = 'i',
@@ -54,11 +45,11 @@ fcpyconv = [
     FCPyConversionRow(fortran_isoc = 'c_float',
                       ctype = 'float',
                       py_type = 'f',
-                      py_conv = 'PyFloat_AsDouble'),
+                      py_conv = 'float_from_pyobj'),
     FCPyConversionRow(fortran_isoc = 'c_double',
                       ctype = 'double',
                       py_type = 'd',
-                      py_conv = 'PyFloat_AsDouble'),
+                      py_conv = 'double_from_pyobj'),
 ]
 
 def find_typeblocks(pymod):
@@ -112,17 +103,18 @@ def gen_typedecl(structname, tvars):
 def gen_typefunc(structname, tvars):
     cline = []
     for idx,tv in enumerate(tvars):
-        cline.append(f"xstruct->{tv.varname} = {tv.py_conv}(PyList_GetItem(vals, {idx}));\n\t\t")
+        cline.append(f"{tv.py_conv}(&xstruct->{tv.varname}, PyList_GetItem(vals, {idx}), \"Error during conversion of {tv.varname} to {tv.ctype}\");\n\t ")
+        # cline.append(f" = {tv.py_conv}(PyList_GetItem(vals, {idx}));\n\t\t")
     # TODO: Error out (or warn) if the wrong number of inputs were passed
     # Currently, this function always returns if possible, even when the input "type" is not compatible
     rvfunc = f"""
-    int try_pyarr_from_{structname}({structname} *xstruct, PyObject *x_capi){{
-            PyObject* dict;
-            PyArg_ParseTuple(x_capi, "O", &dict);
-            PyObject* vals = PyDict_Values(dict);
-            {''.join(cline)}
-            return 1;
-            }}
+int try_pyarr_from_{structname}({structname} *xstruct, PyObject *x_capi){{
+   PyObject* dict;
+   PyArg_ParseTuple(x_capi, "O", &dict);
+   PyObject* vals = PyDict_Values(dict);
+   {''.join(cline)}
+   return 1;
+   }}
     """
     return rvfunc
 
@@ -159,7 +151,9 @@ def gen_typeret(structname, tvars, vname):
 
 def buildhooks(pymod):
     # One structure and function for each derived type
-    res = []
+    tdefs = []
+    tfuncs = []
+    needs = []
     # XXX: Get the type definitions in a sane way
     for pym in pymod.get('body'):
         for blk in pym['body']:
@@ -167,11 +161,14 @@ def buildhooks(pymod):
                 if typedet['block']!='type':
                     continue
                 sname, vardefs = extract_typedat(typedet)
-                res.append('\n'.join([gen_typedecl(sname, vardefs),
-                                      gen_typefunc(sname, vardefs)]))
+                needs.append([x.py_conv for x in vardefs])
+                tdefs.append('\n'.join([gen_typedecl(sname, vardefs)]))
+                tfuncs.append('\n'.join([gen_typefunc(sname, vardefs)]))
     # TODO: Document how these dictionary items get used in rules.py
     ret = {
-        'typedefs_derivedtypes': res,
+        'typedefs_derivedtypedefs': tdefs,
+        'typedefs_derivedtypefuncs': tfuncs,
+        'need': needs
     }
     return ret
 

@@ -140,14 +140,17 @@ static PyObject *#modulename#_module;
 """ + gentitle("See f2py2e/cfuncs.py: typedefs_generated") + """
 #typedefs_generated#
 
-""" + gentitle("See f2py2e/cfuncs.py: typedefs_derivedtypes") + """
-#typedefs_derivedtypes#
+""" + gentitle("See f2py2e/simple_derived_types.py") + """
+#typedefs_derivedtypedefs#
 
 """ + gentitle("See f2py2e/cfuncs.py: cppmacros") + """
 #cppmacros#
 
 """ + gentitle("See f2py2e/cfuncs.py: cfuncs") + """
 #cfuncs#
+
+""" + gentitle("See f2py2e/simple_derived_types.py") + """
+#typedefs_derivedtypefuncs#
 
 """ + gentitle("See f2py2e/cfuncs.py: userincludes") + """
 #userincludes#
