@@ -200,7 +200,8 @@ def routine_rules(rout):
 # TODO: Refactor, this is not Pythonic
 def arg_routines(rout, idx):
     args, _ = aux.getargs2(rout)
-    if aux.isscalar(rout['vars'][args[idx]]):
+    rv = rout['vars'][args[idx]]
+    if aux.isscalar(rv):
         return
     rettype = [
         x['typename'] for x in rout['vars'].values()
@@ -212,7 +213,10 @@ def arg_routines(rout, idx):
             continue
         if typedet['name'] == rettype:
             sname, vardefs = extract_typedat(typedet)
-            dretf, dret = gen_typeret(sname, vardefs, args[idx])
+            if aux.isintent_in(rv):
+                dretf = dret = ''
+            else:
+                dretf, dret = gen_typeret(sname, vardefs, args[idx])
     return {
         f'{args[idx]}_drf': dretf,
         f'{args[idx]}_ret': dret,
