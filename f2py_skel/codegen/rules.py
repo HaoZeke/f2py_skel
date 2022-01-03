@@ -1262,7 +1262,7 @@ def buildmodule(m, um):
     ar = applyrules(mr, vrd)
     rd = dictappend(rd, ar)
 
-    # Construct F90 simple derived type support
+    # Construct F90 simple derived type declarations
     mr = simple_derived_types.buildhooks(m)
     ar = applyrules(mr, vrd)
     rd = dictappend(rd, ar)

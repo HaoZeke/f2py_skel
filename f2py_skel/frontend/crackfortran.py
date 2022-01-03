@@ -153,6 +153,7 @@ from f2py_skel import __version__
 # As the needed functions cannot be determined by static inspection of the
 # code, it is safest to use import * pending a major refactoring of f2py.
 from f2py_skel.stds.auxfuncs import *
+from f2py_skel.stds import auxfuncs as aux
 from f2py_skel.stds import symbolic
 from f2py_skel import __version__
 
@@ -910,7 +911,6 @@ def _is_intent_callback(vdecl):
 def _resolvetypedefpattern(line):
     line = ''.join(line.split())  # removes whitespace
     m1 = typedefpattern.match(line)
-    print(line, m1)
     if m1:
         attrs = m1.group('attributes')
         attrs = [a.lower() for a in attrs.split(',')] if attrs else []

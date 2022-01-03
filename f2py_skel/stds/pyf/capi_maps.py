@@ -459,6 +459,9 @@ def getpydocsign(a, var):
                 ua = ''
         sig = '%s : call-back function%s' % (a, ua)
         sigout = sig
+    elif isderivedtype(var):
+        sig = f"{a} : derived type {var['typename']} with intent {var['intent']}"
+        sigout = sig
     else:
         errmess(
             'getpydocsign: Could not resolve docsignature for "%s".\n' % a)
