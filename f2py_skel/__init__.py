@@ -16,5 +16,6 @@ if __name__ == "__main__":
     sys.exit(main())
 
 # Deprecated
-from f2py_skel.utils.deprecationhelpers import PathDeprecationLoader
-crackfortran = PathDeprecationLoader("crackfortran", "f2py_skel.frontend.crackfortran", warnmsg="DO NOT USE")
+from f2py_skel.utils.deprecationhelpers import PathDeprecationLoader, PathDeprecations
+# crackfortran = PathDeprecationLoader("crackfortran", "f2py_skel.frontend.crackfortran", warnmsg="DO NOT USE")
+PathDeprecations()

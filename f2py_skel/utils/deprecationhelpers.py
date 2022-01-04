@@ -1,5 +1,41 @@
 import typing, types
 import sys, warnings, importlib
+from importlib.abc import MetaPathFinder, Loader
+# from MainModule.SubModule import *
+
+# class MyLoader(Loader):
+#     def module_repr(self, module):
+#         return repr(module)
+
+#     def load_module(self, fullname):
+#         old_name = fullname
+#         names = fullname.split(".")
+#         names[1] = "SubModule"
+#         fullname = ".".join(names)
+#         module = importlib.import_module(fullname)
+#         sys.modules[old_name] = module
+#         return module
+
+
+# class MyImport(MetaPathFinder):
+#     def find_module(self, fullname, path=None):
+#         names = fullname.split(".")
+#         if len(names) >= 2 and names[0] == "Module" and names[1] == "LegacySubModule":
+#             return MyLoader()
+
+# See https://realpython.com/python-import/
+class PathDeprecations:
+    def __init__(self):
+        sys.meta_path.append(self)
+
+    @classmethod
+    def find_spec(cls, name, path, target=None):
+        print(f"Module {name!r} not found. Fixing path")
+        module = importlib.import_module("f2py_skel.frontend.crackfortran")
+        sys.modules[name] = module
+        if name in sys.modules:
+            print("Got it")
+        globals()["f2py_skel.crackfortran"] = module
 
 
 class PathDeprecationLoader(types.ModuleType):
