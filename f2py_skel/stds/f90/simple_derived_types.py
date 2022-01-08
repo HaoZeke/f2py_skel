@@ -97,15 +97,27 @@ def find_typeblocks(pymod):
 def extract_typedat(typeblock):
     assert typeblock['block'] == 'type'
     typevars = []
+    alldtypes = typeblock['parent_block']['vars']
     structname = typeblock['name']
     for vname in typeblock['varnames']:
         tbv = typeblock['vars'][vname]
         if tbv['typespec'] == 'character':
             vfkind = tbv['charselector']['kind']
+            tvar = [x for x in fcpyconv if x.fortran_isoc == vfkind][0]
+            typevars.append(tvar._replace(varname=vname))
+        elif 'typename' in tbv.keys():
+            breakpoint()
+            if tbv['typename'] in alldtypes:
+                vfkind = tbv['typename']
+                tvar = FCPyConversionRow(
+                    fortran_isoc=vfkind,
+                    ctype=vfkind,
+                    py_type='[f,f]',  # No long double
+                    py_conv='NULL'),
         else:
             vfkind = tbv['kindselector']['kind']
-        tvar = [x for x in fcpyconv if x.fortran_isoc == vfkind][0]
-        typevars.append(tvar._replace(varname=vname))
+            tvar = [x for x in fcpyconv if x.fortran_isoc == vfkind][0]
+            typevars.append(tvar._replace(varname=vname))
     return structname, typevars
 
 
