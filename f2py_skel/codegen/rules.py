@@ -81,7 +81,7 @@ from f2py_skel.codegen import cfuncs
 from f2py_skel.stds.f77 import common_rules
 from f2py_skel.stds.f90 import use_rules
 from f2py_skel.stds.f90 import f90mod_rules
-from f2py_skel.stds.f90 import simple_derived_types
+from f2py_skel.stds.f90 import simple_derived_types as sdt
 from f2py_skel.codegen import func2subr
 
 options = {}
@@ -1264,7 +1264,7 @@ def buildmodule(m, um):
     rd = dictappend(rd, ar)
 
     # Construct F90 simple derived type declarations
-    mr = simple_derived_types.buildhooks(m)
+    mr = sdt.buildhooks(m)
     ar = applyrules(mr, vrd)
     rd = dictappend(rd, ar)
 
@@ -1419,11 +1419,12 @@ def buildapi(rout):
             rd = dictappend(rd, ar)
 
     # Derived type returns
-    if [True for x in var.values() if x['typespec']=='type'][0]:
-        mr = simple_derived_types.routine_rules(rout)
+    isDerived = [True for x in var.values() if x['typespec']=='type']
+    if len(isDerived)>0:
+        mr = sdt.routine_rules(rout)
         ar = applyrules(mr, vrd)
         rd = dictappend(rd, ar)
-        marg = simple_derived_types.arg_rules(rout)
+        marg = sdt.arg_rules(rout)
         ar = applyrules(marg, vrd)
         rd = dictappend(rd, ar)
 
