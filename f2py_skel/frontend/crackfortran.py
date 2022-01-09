@@ -155,6 +155,7 @@ from f2py_skel import __version__
 from f2py_skel.stds.auxfuncs import *
 from f2py_skel.stds import auxfuncs as aux
 from f2py_skel.stds import symbolic
+from f2py_skel.stds.pyf import capi_maps as capim
 from f2py_skel import __version__
 
 f2py_version = __version__.version
@@ -1396,6 +1397,8 @@ def analyzeline(m, case, line):
                                 'analyzeline: Not local=>use pattern found in %s\n' % repr(l))
                     else:
                         rl[l] = l
+                    if name == "iso_c_binding":
+                        rl = {k:capim.iso_c_binding_map.get(k) for k,v in rl.items()}
                     groupcache[groupcounter]['use'][name]['map'] = rl
             # TODO handle ONLY for intrinsics
         elif mintrin:
@@ -1405,12 +1408,24 @@ def analyzeline(m, case, line):
                 groupcache[groupcounter]['use'] = {}
             intrmm_ll = [x.strip() for x in intrmm['allintrin'].split(',')]
             for l in intrmm_ll:
-                if not isvalidintrinsicmod(l):
+                if l =="iso_c_binding":
+                    groupcache[groupcounter]['use'][l] = capim.iso_c_binding_map
+                elif l =="iso_fortran_env":
+                    outmess(
+                        'analyzeline: ISO_FORTRAN_ENV types are not yet supported'
+                    )
+                elif l =="ieee_exceptions":
+                    outmess(
+                        'analyzeline: IEEE_EXCEPTIONS are not yet supported'
+                    )
+                elif l =="ieee_arithmetic":
+                    outmess(
+                        'analyzeline: IEEE_ARITHMETIC are not yet supported'
+                    )
+                else:
                     outmess(
                         'analyzeline: Not a valid intrinsic, must be one of ["iso_c_binding", "iso_fortran_env", "ieee_exceptions", "ieee_arithmetic", "ieee_features"]'
                     )
-                else:
-                      groupcache[groupcounter]['use'][l] = {}
             else:
                 pass
         else:
