@@ -93,6 +93,15 @@ class TestMarkinnerspaces:
         assert markinnerspaces("a 'b c' 'd e'") == "a 'b@_@c' 'd@_@e'"
         assert markinnerspaces(r'a "b c" "d e"') == r'a "b@_@c" "d@_@e"'
 
+    def test_access_type(self, tmp_path):
+        fpath = util.getpath("tests", "src", "crackfortran", "accesstype.f90")
+        mod = crackfortran.crackfortran([str(fpath)])
+        assert len(mod) == 1
+        tt = mod[0]['vars']
+        assert set(tt['a']['attrspec']) == {'private', 'bind(c)'}
+        assert set(tt['b_']['attrspec']) == {'public', 'bind(c)'}
+        assert set(tt['c']['attrspec']) == {'public'}
+
 
 class TestDimSpec(util.F2PyTest):
     """This test suite tests various expressions that are used as dimension
@@ -194,9 +203,16 @@ class TestDimSpec(util.F2PyTest):
             assert sz == sz1, (n, n1, sz, sz1)
 
 
-class TestModuleDeclaration:
-    def test_dependencies(self, tmp_path):
-        fpath = util.getpath("tests", "src", "crackfortran", "foo_deps.f90")
+class TestIntrinsicModule:
+    def test_dependencies_only(self, tmp_path):
+        fpath = util.getpath("tests", "src", "crackfortran", "isocbindonly.f90")
         mod = crackfortran.crackfortran([str(fpath)])
         assert len(mod) == 1
-        assert mod[0]["vars"]["abar"]["="] == "bar('abar')"
+        assert mod[0]["use"] == {'iso_c_binding': {'map': {'c_double': 'double', 'c_float': 'float'}, 'only': 1}}
+
+    def test_dependencies(self, tmp_path):
+        fpath = util.getpath("tests", "src", "crackfortran", "isocbind.f90")
+        mod = crackfortran.crackfortran([str(fpath)])
+        assert len(mod) == 1
+        from f2py_skel.stds.pyf import capi_maps as capim
+        assert list(mod[0]["use"].values())[0] == capim.iso_c_binding_map

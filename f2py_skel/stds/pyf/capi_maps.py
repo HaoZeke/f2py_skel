@@ -17,7 +17,6 @@ f2py_version = __version__.version
 import copy
 import re
 import os
-from f2py_skel.frontend.crackfortran import markoutercomma
 from f2py_skel.stds.pyf import cb_rules
 
 f2py_version = __version__.version
@@ -26,6 +25,7 @@ f2py_version = __version__.version
 # As the needed functions cannot be determined by static inspection of the
 # code, it is safest to use import * pending a major refactoring of f2py.
 from f2py_skel.stds.auxfuncs import *
+from f2py_skel.stds import auxfuncs as aux
 
 __all__ = [
     'getctype', 'getstrlength', 'getarrdims', 'getpydocsign',
@@ -58,6 +58,7 @@ c2py_map = {'double': 'float',
             'complex_double': 'complex',
             'complex_long_double': 'complex',          # forced casting
             'string': 'string',
+            'struct': 'struct',
             }
 c2capi_map = {'double': 'NPY_DOUBLE',
               'float': 'NPY_FLOAT',
@@ -74,8 +75,9 @@ c2capi_map = {'double': 'NPY_DOUBLE',
               'complex_float': 'NPY_CFLOAT',
               'complex_double': 'NPY_CDOUBLE',
               'complex_long_double': 'NPY_CDOUBLE',   # forced casting
-              'string': 'NPY_STRING'}
-
+              'string': 'NPY_STRING',
+              'struct': 'struct'
+              }
 # These new maps aren't used anywhere yet, but should be by default
 #  unless building numeric or numarray extensions.
 if using_newcore:
@@ -96,7 +98,8 @@ if using_newcore:
                   'complex_float': 'NPY_CFLOAT',
                   'complex_double': 'NPY_CDOUBLE',
                   'complex_long_double': 'NPY_CDOUBLE',
-                  'string':'NPY_STRING'
+                  'string':'NPY_STRING',
+                  'struct': 'struct'
                   }
 
 c2pycode_map = {'double': 'd',
@@ -114,7 +117,7 @@ c2pycode_map = {'double': 'd',
                 'complex_float': 'F',
                 'complex_double': 'D',
                 'complex_long_double': 'D',               # forced casting
-                'string': 'c'
+                'string': 'c',
                 }
 
 if using_newcore:
@@ -135,7 +138,8 @@ if using_newcore:
                     'complex_float': 'F',
                     'complex_double': 'D',
                     'complex_long_double': 'G',
-                    'string': 'S'}
+                    'string': 'S',
+                    }
 
 c2buildvalue_map = {'double': 'd',
                     'float': 'f',
@@ -148,7 +152,8 @@ c2buildvalue_map = {'double': 'd',
                     'complex_float': 'N',
                     'complex_double': 'N',
                     'complex_long_double': 'N',
-                    'string': 'y'}
+                    'string': 'y',
+                    }
 
 f2cmap_all = {'real': {'': 'float', '4': 'float', '8': 'double',
                        '12': 'long_double', '16': 'long_double'},
@@ -167,8 +172,50 @@ f2cmap_all = {'real': {'': 'float', '4': 'float', '8': 'double',
               'double complex': {'': 'complex_double'},
               'double precision': {'': 'double'},
               'byte': {'': 'char'},
-              'character': {'': 'string'}
+              'character': {'': 'string'},
+              'type': {'': 'struct'},
+              'character': {'': 'string'},
               }
+
+# From:
+# https://gcc.gnu.org/onlinedocs/gfortran/ISO_005fC_005fBINDING.html
+iso_c_binding_map = {
+    # Integers
+    'c_int': 'int',
+    'c_short': 'short int',
+    'c_long': 'long int',
+    'c_long_long': 'long long int',
+    'c_signed_char': 'signed char',
+    'c_size_t': 'size_t',
+    'c_int8_t': 'int8_t',
+    'c_int16_t': 'int16_t',
+    'c_int32_t': 'int32_t',
+    'c_int64_t': 'int64_t',
+    'c_int_least8_t': 'int_least8_t',
+    'c_int_least16_t': 'int_least16_t',
+    'c_int_least32_t': 'int_least32_t',
+    'c_int_least64_t': 'int_least64_t',
+    'c_int_fast8_t': 'int_fast8_t',
+    'c_int_fast16_t': 'int_fast16_t',
+    'c_int_fast32_t': 'int_fast32_t',
+    'c_int_fast64_t': 'int_fast64_t',
+    'c_intmax_t': 'intmax_t',
+    'c_intptr_t': 'intptr_t',
+    'c_ptrdiff_t': 'ptrdiff_t',
+    # Floating Point Numbers
+    'c_float': 'float',
+    'c_double': 'double',
+    'c_long_double': 'long double',
+    # Complex Numbers
+    'c_float_complex': 'float _Complex',
+    'c_double_complex': 'double _Complex',
+    'c_long_double_complex': 'long double _Complex',
+    # Logical
+    'c_bool': '_Bool',
+    # Char
+    'c_char': 'char',
+}
+# TODO:Support ["iso_fortran_env", "ieee_exceptions", "ieee_arithmetic", "ieee_features"]
 
 f2cmap_default = copy.deepcopy(f2cmap_all)
 
@@ -233,6 +280,7 @@ cformat_map = {'double': '%g',
                'complex_double': '(%g,%g)',
                'complex_long_double': '(%Lg,%Lg)',
                'string': '%s',
+               'struct': '%s',
                }
 
 # Auxiliary functions
@@ -253,6 +301,9 @@ def getctype(var):
         else:
             errmess('getctype: function %s has no return value?!\n' % a)
     elif issubroutine(var):
+        return ctype
+    elif isderivedtype(var):
+        ctype = var['typename']
         return ctype
     elif 'typespec' in var and var['typespec'].lower() in f2cmap_all:
         typespec = var['typespec'].lower()
@@ -442,6 +493,9 @@ def getpydocsign(a, var):
                 ua = ''
         sig = '%s : call-back function%s' % (a, ua)
         sigout = sig
+    elif isderivedtype(var):
+        sig = f"{a} : derived type {var['typename']} with intent {var['intent']}"
+        sigout = sig
     else:
         errmess(
             'getpydocsign: Could not resolve docsignature for "%s".\n' % a)
@@ -480,7 +534,7 @@ def getinit(a, var):
             try:
                 v = var["="]
                 if ',' in v:
-                    ret['init.r'], ret['init.i'] = markoutercomma(
+                    ret['init.r'], ret['init.i'] = aux.markoutercomma(
                         v[1:-1]).split('@,@')
                 else:
                     v = eval(v, {}, {})
@@ -533,7 +587,7 @@ def sign2map(a, var):
         ret['varrformat'] = 'O'
     ret['init'], ret['showinit'] = getinit(a, var)
     if hasinitvalue(var) and iscomplex(var) and not isarray(var):
-        ret['init.r'], ret['init.i'] = markoutercomma(
+        ret['init.r'], ret['init.i'] = aux.markoutercomma(
             ret['init'][1:-1]).split('@,@')
     if isexternal(var):
         ret['cbnamekey'] = a

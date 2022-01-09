@@ -17,6 +17,7 @@ Pearu Peterson
 import pprint
 import sys
 import types
+import re
 from functools import reduce
 
 from f2py_skel import __version__
@@ -38,11 +39,11 @@ __all__ = [
     'islogicalfunction', 'islong_complex', 'islong_double',
     'islong_doublefunction', 'islong_long', 'islong_longfunction',
     'ismodule', 'ismoduleroutine', 'isoptional', 'isprivate', 'isrequired',
-    'isroutine', 'isscalar', 'issigned_long_longarray', 'isstring',
+    'isroutine', 'isderivedtype', 'isscalar', 'issigned_long_longarray', 'isstring',
     'isstringarray', 'isstringfunction', 'issubroutine',
     'issubroutine_wrap', 'isthreadsafe', 'isunsigned', 'isunsigned_char',
     'isunsigned_chararray', 'isunsigned_long_long',
-    'isunsigned_long_longarray', 'isunsigned_short',
+    'isunsigned_long_longarray', 'isvalidintrinsicmod', 'isunsigned_short',
     'isunsigned_shortarray', 'l_and', 'l_not', 'l_or', 'outmess',
     'replace', 'show', 'stripcomma', 'throw_error',
 ]
@@ -95,9 +96,12 @@ def isarray(var):
     return 'dimension' in var and not isexternal(var)
 
 
-def isscalar(var):
-    return not (isarray(var) or isstring(var) or isexternal(var))
+def isderivedtype(var):
+    return var.get('typespec')=='type'
 
+
+def isscalar(var):
+    return not (isarray(var) or isstring(var) or isexternal(var) or isderivedtype(var))
 
 def iscomplex(var):
     return isscalar(var) and \
@@ -483,7 +487,6 @@ isintent_dict = {isintent_in: 'INTENT_IN', isintent_inout: 'INTENT_INOUT',
 def isprivate(var):
     return 'attrspec' in var and 'private' in var['attrspec']
 
-
 def hasinitvalue(var):
     return '=' in var
 
@@ -855,3 +858,80 @@ def applyrules(rules, d, var={}):
             if ret[k] == []:
                 del ret[k]
     return ret
+
+##################
+#  Crackfortran  #
+##################
+
+def split_by_unquoted(line, characters):
+    """
+    Splits the line into (line[:i], line[i:]),
+    where i is the index of first occurrence of one of the characters
+    not within quotes, or len(line) if no such index exists
+    """
+    assert not (set('"\'') & set(characters)), "cannot split by unquoted quotes"
+    r = re.compile(
+        r"\A(?P<before>({single_quoted}|{double_quoted}|{not_quoted})*)"
+        r"(?P<after>{char}.*)\Z".format(
+            not_quoted="[^\"'{}]".format(re.escape(characters)),
+            char="[{}]".format(re.escape(characters)),
+            single_quoted=r"('([^'\\]|(\\.))*')",
+            double_quoted=r'("([^"\\]|(\\.))*")'))
+    m = r.match(line)
+    if m:
+        d = m.groupdict()
+        return (d["before"], d["after"])
+    return (line, "")
+
+
+def markouterparen(line):
+    l = ''
+    f = 0
+    for c in line:
+        if c == '(':
+            f = f + 1
+            if f == 1:
+                l = l + '@(@'
+                continue
+        elif c == ')':
+            f = f - 1
+            if f == 0:
+                l = l + '@)@'
+                continue
+        l = l + c
+    return l
+
+
+def markoutercomma(line, comma=','):
+    l = ''
+    f = 0
+    before, after = split_by_unquoted(line, comma + '()')
+    l += before
+    while after:
+        if (after[0] == comma) and (f == 0):
+            l += '@' + comma + '@'
+        else:
+            l += after[0]
+            if after[0] == '(':
+                f += 1
+            elif after[0] == ')':
+                f -= 1
+        before, after = split_by_unquoted(after[1:], comma + '()')
+        l += before
+    assert not f, repr((f, line, l))
+    return l
+
+
+def unmarkouterparen(line):
+    r = line.replace('@(@', '(').replace('@)@', ')')
+    return r
+
+
+
+# Intrinsic modules
+# References:
+# - J3/21-007: Draft Fortran 202x. https://j3-fortran.org/doc/year/21/21-007.pdf
+intrinsic_modules = ["iso_c_binding", "iso_fortran_env", "ieee_exceptions", "ieee_arithmetic", "ieee_features"]
+
+def isvalidintrinsicmod(modu):
+    return modu in intrinsic_modules

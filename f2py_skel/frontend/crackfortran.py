@@ -153,7 +153,9 @@ from f2py_skel import __version__
 # As the needed functions cannot be determined by static inspection of the
 # code, it is safest to use import * pending a major refactoring of f2py.
 from f2py_skel.stds.auxfuncs import *
+from f2py_skel.stds import auxfuncs as aux
 from f2py_skel.stds import symbolic
+from f2py_skel.stds.pyf import capi_maps as capim
 from f2py_skel import __version__
 
 f2py_version = __version__.version
@@ -390,10 +392,10 @@ def readfortrancode(ffile, dowithline=show, istop=1):
                 break
             l = l[:-1]
         if not strictf77:
-            (l, rl) = split_by_unquoted(l, '!')
+            (l, rl) = aux.split_by_unquoted(l, '!')
             l += ' '
             if rl[:5].lower() == '!f2py':  # f2py directive
-                l, _ = split_by_unquoted(l + 4 * ' ' + rl[5:], '!')
+                l, _ = aux.split_by_unquoted(l + 4 * ' ' + rl[5:], '!')
         if l.strip() == '':  # Skip empty line
             if sourcecodeform == 'free':
                 # In free form, a statement continues in the next line
@@ -623,29 +625,9 @@ multilinepattern = re.compile(
     r"\s*(?P<before>''')(?P<this>.*?)(?P<after>''')\s*\Z", re.S), 'multiline'
 ##
 
-def split_by_unquoted(line, characters):
-    """
-    Splits the line into (line[:i], line[i:]),
-    where i is the index of first occurrence of one of the characters
-    not within quotes, or len(line) if no such index exists
-    """
-    assert not (set('"\'') & set(characters)), "cannot split by unquoted quotes"
-    r = re.compile(
-        r"\A(?P<before>({single_quoted}|{double_quoted}|{not_quoted})*)"
-        r"(?P<after>{char}.*)\Z".format(
-            not_quoted="[^\"'{}]".format(re.escape(characters)),
-            char="[{}]".format(re.escape(characters)),
-            single_quoted=r"('([^'\\]|(\\.))*')",
-            double_quoted=r'("([^"\\]|(\\.))*")'))
-    m = r.match(line)
-    if m:
-        d = m.groupdict()
-        return (d["before"], d["after"])
-    return (line, "")
-
 def _simplifyargs(argsline):
     a = []
-    for n in markoutercomma(argsline).split('@,@'):
+    for n in aux.markoutercomma(argsline).split('@,@'):
         for r in '(),':
             n = n.replace(r, '_')
         a.append(n)
@@ -666,16 +648,16 @@ def crackline(line, reset=0):
     global filepositiontext, currentfilename, neededmodule, expectbegin
     global skipblocksuntil, skipemptyends, previous_context, gotnextfile
 
-    _, has_semicolon = split_by_unquoted(line, ";")
+    _, has_semicolon = aux.split_by_unquoted(line, ";")
     if has_semicolon and not (f2pyenhancementspattern[0].match(line) or
                                multilinepattern[0].match(line)):
         # XXX: non-zero reset values need testing
         assert reset == 0, repr(reset)
         # split line on unquoted semicolons
-        line, semicolon_line = split_by_unquoted(line, ";")
+        line, semicolon_line = aux.split_by_unquoted(line, ";")
         while semicolon_line:
             crackline(line, reset)
-            line, semicolon_line = split_by_unquoted(semicolon_line[1:], ";")
+            line, semicolon_line = aux.split_by_unquoted(semicolon_line[1:], ";")
         crackline(line, reset)
         return
     if reset < 0:
@@ -745,7 +727,7 @@ def crackline(line, reset=0):
                 if 'interfaced' in groupcache[groupcounter] and name in groupcache[groupcounter]['interfaced']:
                     continue
                 m1 = re.match(
-                    r'(?P<before>[^"]*)\b%s\b\s*@\(@(?P<args>[^@]*)@\)@.*\Z' % name, markouterparen(line), re.I)
+                    r'(?P<before>[^"]*)\b%s\b\s*@\(@(?P<args>[^@]*)@\)@.*\Z' % name, aux.markouterparen(line), re.I)
                 if m1:
                     m2 = re_1.match(m1.group('before'))
                     a = _simplifyargs(m1.group('args'))
@@ -810,48 +792,6 @@ def crackline(line, reset=0):
         analyzeline(m, pat[1], line)
 
 
-def markouterparen(line):
-    l = ''
-    f = 0
-    for c in line:
-        if c == '(':
-            f = f + 1
-            if f == 1:
-                l = l + '@(@'
-                continue
-        elif c == ')':
-            f = f - 1
-            if f == 0:
-                l = l + '@)@'
-                continue
-        l = l + c
-    return l
-
-
-def markoutercomma(line, comma=','):
-    l = ''
-    f = 0
-    before, after = split_by_unquoted(line, comma + '()')
-    l += before
-    while after:
-        if (after[0] == comma) and (f == 0):
-            l += '@' + comma + '@'
-        else:
-            l += after[0]
-            if after[0] == '(':
-                f += 1
-            elif after[0] == ')':
-                f -= 1
-        before, after = split_by_unquoted(after[1:], comma + '()')
-        l += before
-    assert not f, repr((f, line, l))
-    return l
-
-def unmarkouterparen(line):
-    r = line.replace('@(@', '(').replace('@)@', ')')
-    return r
-
-
 def appenddecl(decl, decl2, force=1):
     if not decl:
         decl = {}
@@ -885,6 +825,9 @@ def appenddecl(decl, decl2, force=1):
 
 selectpattern = re.compile(
     r'\s*(?P<this>(@\(@.*?@\)@|\*[\d*]+|\*\s*@\(@.*?@\)@|))(?P<after>.*)\Z', re.I)
+typedefpattern = re.compile(
+    r'(?:,(?P<attributes>[\w(),]+))?(::)?(?P<name>\b[a-z$_][\w$]*\b)'
+    r'(?:\((?P<params>[\w,]*)\))?\Z', re.I)
 nameargspattern = re.compile(
     r'\s*(?P<name>\b[\w$]+\b)\s*(@\(@\s*(?P<args>[\w\s,]*)\s*@\)@|)\s*((result(\s*@\(@\s*(?P<result>\b[\w$]+\b)\s*@\)@|))|(bind\s*@\(@\s*(?P<bind>.*)\s*@\)@))*\s*\Z', re.I)
 callnameargspattern = re.compile(
@@ -904,8 +847,18 @@ def _is_intent_callback(vdecl):
     return 0
 
 
+def _resolvetypedefpattern(line):
+    line = ''.join(line.split())  # removes whitespace
+    m1 = typedefpattern.match(line)
+    if m1:
+        attrs = m1.group('attributes')
+        attrs = [a.lower() for a in attrs.split(',')] if attrs else []
+        return m1.group('name'), attrs, m1.group('params')
+    return None, [], None
+
+
 def _resolvenameargspattern(line):
-    line = markouterparen(line)
+    line = aux.markouterparen(line)
     m1 = nameargspattern.match(line)
     if m1:
         return m1.group('name'), m1.group('args'), m1.group('result'), m1.group('bind')
@@ -948,7 +901,13 @@ def analyzeline(m, case, line):
             block = 'python module'
         elif re.match(r'abstract\s*interface', block, re.I):
             block = 'abstract interface'
-        name, args, result, bind = _resolvenameargspattern(m.group('after'))
+        if block == 'type':
+            name, attrs, _ = _resolvetypedefpattern(m.group('after'))
+            groupcache[groupcounter]['vars'][name] = dict(attrspec = attrs)
+            args = []
+            result = None
+        else:
+            name, args, result, _ = _resolvenameargspattern(m.group('after'))
         if name is None:
             if block == 'block data':
                 name = '_BLOCK_DATA_'
@@ -960,7 +919,7 @@ def analyzeline(m, case, line):
         previous_context = (block, name, groupcounter)
         if args:
             args = rmbadname([x.strip()
-                              for x in markoutercomma(args).split('@,@')])
+                              for x in aux.markoutercomma(args).split('@,@')])
         else:
             args = []
         if '' in args:
@@ -1103,7 +1062,7 @@ def analyzeline(m, case, line):
         if name is not None:
             if args:
                 args = rmbadname([x.strip()
-                                  for x in markoutercomma(args).split('@,@')])
+                                  for x in aux.markoutercomma(args).split('@,@')])
             else:
                 args = []
             assert result is None, repr(result)
@@ -1120,7 +1079,7 @@ def analyzeline(m, case, line):
         ll = m.group('after').strip()
         i = ll.find('::')
         if i < 0 and case == 'intent':
-            i = markouterparen(ll).find('@)@') - 2
+            i = aux.markouterparen(ll).find('@)@') - 2
             ll = ll[:i + 1] + '::' + ll[i + 1:]
             i = ll.find('::')
             if ll[i:] == '::' and 'args' in groupcache[groupcounter]:
@@ -1133,14 +1092,14 @@ def analyzeline(m, case, line):
         else:
             pl = ll[:i].strip()
             ll = ll[i + 2:]
-        ch = markoutercomma(pl).split('@,@')
+        ch = aux.markoutercomma(pl).split('@,@')
         if len(ch) > 1:
             pl = ch[0]
             outmess('analyzeline: cannot handle multiple attributes without type specification. Ignoring %r.\n' % (
                 ','.join(ch[1:])))
         last_name = None
 
-        for e in [x.strip() for x in markoutercomma(ll).split('@,@')]:
+        for e in [x.strip() for x in aux.markoutercomma(ll).split('@,@')]:
             m1 = namepattern.match(e)
             if not m1:
                 if case in ['public', 'private']:
@@ -1198,7 +1157,7 @@ def analyzeline(m, case, line):
         edecl = groupcache[groupcounter]['vars']
         ll = m.group('after').strip()[1:-1]
         last_name = None
-        for e in markoutercomma(ll).split('@,@'):
+        for e in aux.markoutercomma(ll).split('@,@'):
             try:
                 k, initexpr = [x.strip() for x in e.split('=')]
             except Exception:
@@ -1250,7 +1209,7 @@ def analyzeline(m, case, line):
                 outmess(
                     'analyzeline: Overwriting earlier "implicit none" statement.\n')
                 impl = {}
-            for e in markoutercomma(m.group('after')).split('@,@'):
+            for e in aux.markoutercomma(m.group('after')).split('@,@'):
                 decl = {}
                 m1 = re.match(
                     r'\s*(?P<this>.*?)\s*(\(\s*(?P<after>[a-z-, ]+)\s*\)\s*|)\Z', e, re.I)
@@ -1274,7 +1233,7 @@ def analyzeline(m, case, line):
                 for k in list(decl.keys()):
                     if not decl[k]:
                         del decl[k]
-                for r in markoutercomma(m1.group('after')).split('@,@'):
+                for r in aux.markoutercomma(m1.group('after')).split('@,@'):
                     if '-' in r:
                         try:
                             begc, endc = [x.strip() for x in r.split('-')]
@@ -1341,7 +1300,7 @@ def analyzeline(m, case, line):
             i = 0
             j = 0
             llen = len(l[1])
-            for v in rmbadname([x.strip() for x in markoutercomma(l[0]).split('@,@')]):
+            for v in rmbadname([x.strip() for x in aux.markoutercomma(l[0]).split('@,@')]):
                 if v[0] == '(':
                     outmess(
                         'analyzeline: implied-DO list "%s" is not supported. Skipping.\n' % v)
@@ -1400,14 +1359,19 @@ def analyzeline(m, case, line):
         for c in cl:
             if c[0] not in commonkey:
                 commonkey[c[0]] = []
-            for i in [x.strip() for x in markoutercomma(c[1]).split('@,@')]:
+            for i in [x.strip() for x in aux.markoutercomma(c[1]).split('@,@')]:
                 if i:
                     commonkey[c[0]].append(i)
         groupcache[groupcounter]['common'] = commonkey
         previous_context = ('common', bn, groupcounter)
     elif case == 'use':
+        # Regular modules
         m1 = re.match(
             r'\A\s*(?P<name>\b\w+\b)\s*((,(\s*\bonly\b\s*:|(?P<notonly>))\s*(?P<list>.*))|)\s*\Z', m.group('after'), re.I)
+        # Intrinsic modules
+        mintrin = re.match(
+            r',?\s*(?P<isintrin>intrinsic)?\s*(::)?(?P<allintrin>((\s*,?\s*(?:\b\w+\b)\s*)*))\Z', m.group('after'), re.I
+        )
         if m1:
             mm = m1.groupdict()
             if 'use' not in groupcache[groupcounter]:
@@ -1433,7 +1397,35 @@ def analyzeline(m, case, line):
                                 'analyzeline: Not local=>use pattern found in %s\n' % repr(l))
                     else:
                         rl[l] = l
+                    if name == "iso_c_binding":
+                        rl = {k:capim.iso_c_binding_map.get(k) for k,v in rl.items()}
                     groupcache[groupcounter]['use'][name]['map'] = rl
+            # TODO handle ONLY for intrinsics
+        elif mintrin:
+            # Intrinsic check
+            intrmm = mintrin.groupdict()
+            if 'use' not in groupcache[groupcounter]:
+                groupcache[groupcounter]['use'] = {}
+            intrmm_ll = [x.strip() for x in intrmm['allintrin'].split(',')]
+            for l in intrmm_ll:
+                if l =="iso_c_binding":
+                    groupcache[groupcounter]['use'][l] = capim.iso_c_binding_map
+                elif l =="iso_fortran_env":
+                    outmess(
+                        'analyzeline: ISO_FORTRAN_ENV types are not yet supported'
+                    )
+                elif l =="ieee_exceptions":
+                    outmess(
+                        'analyzeline: IEEE_EXCEPTIONS are not yet supported'
+                    )
+                elif l =="ieee_arithmetic":
+                    outmess(
+                        'analyzeline: IEEE_ARITHMETIC are not yet supported'
+                    )
+                else:
+                    outmess(
+                        'analyzeline: Not a valid intrinsic, must be one of ["iso_c_binding", "iso_fortran_env", "ieee_exceptions", "ieee_arithmetic", "ieee_features"]'
+                    )
             else:
                 pass
         else:
@@ -1483,14 +1475,14 @@ def cracktypespec0(typespec, ll):
         typespec = 'double precision'
     else:
         typespec = typespec.strip().lower()
-    m1 = selectpattern.match(markouterparen(ll))
+    m1 = selectpattern.match(aux.markouterparen(ll))
     if not m1:
         outmess(
             'cracktypespec0: no kind/char_selector pattern found for line.\n')
         return
     d = m1.groupdict()
     for k in list(d.keys()):
-        d[k] = unmarkouterparen(d[k])
+        d[k] = aux.unmarkouterparen(d[k])
     if typespec in ['complex', 'integer', 'logical', 'real', 'character', 'type']:
         selector = d['this']
         ll = d['after']
@@ -1569,7 +1561,7 @@ def updatevars(typespec, selector, attrspec, entitydecl):
     last_name = None
     kindselect, charselect, typename = cracktypespec(typespec, selector)
     if attrspec:
-        attrspec = [x.strip() for x in markoutercomma(attrspec).split('@,@')]
+        attrspec = [x.strip() for x in aux.markoutercomma(attrspec).split('@,@')]
         l = []
         c = re.compile(r'(?P<start>[a-zA-Z]+)')
         for a in attrspec:
@@ -1581,10 +1573,10 @@ def updatevars(typespec, selector, attrspec, entitydecl):
                 a = s + a[len(s):]
             l.append(a)
         attrspec = l
-    el = [x.strip() for x in markoutercomma(entitydecl).split('@,@')]
+    el = [x.strip() for x in aux.markoutercomma(entitydecl).split('@,@')]
     el1 = []
     for e in el:
-        for e1 in [x.strip() for x in markoutercomma(removespaces(markinnerspaces(e)), comma=' ').split('@ @')]:
+        for e1 in [x.strip() for x in aux.markoutercomma(removespaces(markinnerspaces(e)), comma=' ').split('@ @')]:
             if e1:
                 el1.append(e1.replace('@_@', ' '))
     for e in el1:
@@ -1647,7 +1639,7 @@ def updatevars(typespec, selector, attrspec, entitydecl):
                 groupcache[groupcounter]['externals'] = []
             groupcache[groupcounter]['externals'].append(e)
         if m.group('after'):
-            m1 = lenarraypattern.match(markouterparen(m.group('after')))
+            m1 = lenarraypattern.match(aux.markouterparen(m.group('after')))
             if m1:
                 d1 = m1.groupdict()
                 for lk in ['len', 'array', 'init']:
@@ -1656,7 +1648,7 @@ def updatevars(typespec, selector, attrspec, entitydecl):
                         del d1[lk + '2']
                 for k in list(d1.keys()):
                     if d1[k] is not None:
-                        d1[k] = unmarkouterparen(d1[k])
+                        d1[k] = aux.unmarkouterparen(d1[k])
                     else:
                         del d1[k]
                 if 'len' in d1 and 'array' in d1:
@@ -1741,7 +1733,7 @@ def cracktypespec(typespec, selector):
             del charselect['charlen']
             if charselect['lenkind']:
                 lenkind = lenkindpattern.match(
-                    markoutercomma(charselect['lenkind']))
+                    aux.markoutercomma(charselect['lenkind']))
                 lenkind = lenkind.groupdict()
                 for lk in ['len', 'kind']:
                     if lenkind[lk + '2']:
@@ -2054,7 +2046,7 @@ def analyzecommon(block):
                 dims = []
                 if m.group('dims'):
                     dims = [x.strip()
-                            for x in markoutercomma(m.group('dims')).split('@,@')]
+                            for x in aux.markoutercomma(m.group('dims')).split('@,@')]
                 n = rmbadname1(m.group('name').strip())
                 if n in block['vars']:
                     if 'attrspec' in block['vars'][n]:
@@ -2527,7 +2519,7 @@ def analyzevars(block):
                 if intent:
                     if 'intent' not in vars[n]:
                         vars[n]['intent'] = []
-                    for c in [x.strip() for x in markoutercomma(intent).split('@,@')]:
+                    for c in [x.strip() for x in aux.markoutercomma(intent).split('@,@')]:
                         # Remove spaces so that 'in out' becomes 'inout'
                         tmp = c.replace(' ', '')
                         if tmp not in vars[n]['intent']:
@@ -2544,20 +2536,20 @@ def analyzevars(block):
                 if depend is not None:
                     if 'depend' not in vars[n]:
                         vars[n]['depend'] = []
-                    for c in rmbadname([x.strip() for x in markoutercomma(depend).split('@,@')]):
+                    for c in rmbadname([x.strip() for x in aux.markoutercomma(depend).split('@,@')]):
                         if c not in vars[n]['depend']:
                             vars[n]['depend'].append(c)
                     depend = None
                 if check is not None:
                     if 'check' not in vars[n]:
                         vars[n]['check'] = []
-                    for c in [x.strip() for x in markoutercomma(check).split('@,@')]:
+                    for c in [x.strip() for x in aux.markoutercomma(check).split('@,@')]:
                         if c not in vars[n]['check']:
                             vars[n]['check'].append(c)
                     check = None
             if dim and 'dimension' not in vars[n]:
                 vars[n]['dimension'] = []
-                for d in rmbadname([x.strip() for x in markoutercomma(dim).split('@,@')]):
+                for d in rmbadname([x.strip() for x in aux.markoutercomma(dim).split('@,@')]):
                     star = ':' if d == ':' else '*'
                     # Evaluate `d` with respect to params
                     if d in params:
@@ -2573,7 +2565,7 @@ def analyzevars(block):
                     if d == star:
                         dl = [star]
                     else:
-                        dl = markoutercomma(d, ':').split('@:@')
+                        dl = aux.markoutercomma(d, ':').split('@:@')
                     if len(dl) == 2 and '*' in dl:  # e.g. dimension(5:*)
                         dl = ['*']
                         d = '*'
@@ -2921,7 +2913,7 @@ def determineexprtype(expr, vars, rules={}):
                 'determineexprtype: selected kind types not supported (%s)\n' % repr(expr))
         return {'typespec': 'real'}
     for op in ['+', '-', '*', '/']:
-        for e in [x.strip() for x in markoutercomma(expr, comma=op).split('@' + op + '@')]:
+        for e in [x.strip() for x in aux.markoutercomma(expr, comma=op).split('@' + op + '@')]:
             if e in vars:
                 return _ensure_exprdict(vars[e])
     t = {}

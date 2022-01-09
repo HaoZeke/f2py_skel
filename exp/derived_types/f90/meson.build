@@ -1,0 +1,39 @@
+project('f2py_examples', 'c',
+  version : '0.1',
+  default_options : ['warning_level=2'])
+
+add_languages('fortran')
+
+py_mod = import('python')
+py3 = py_mod.find_installation('python3')
+py3_dep = py3.dependency()
+message(py3.path())
+message(py3.get_install_dir())
+
+incdir_numpy = run_command(py3,
+  ['-c', 'import os; os.chdir(".."); import numpy; print(numpy.get_include())'],
+  check : true
+).stdout().strip()
+
+incdir_f2py = run_command(py3,
+    ['-c', 'import os; os.chdir(".."); import numpy.f2py; print(numpy.f2py.get_include())'],
+    check : true
+).stdout().strip()
+
+# fibby_source = custom_target('fibbymodule.c',
+#                             input : ['vecmod.f90'],
+#                             output : ['fibbymodule.c'],
+#                             command : [ 'f2py', '@INPUT@',
+#                             '-m', 'fibby', '--lower' ])
+
+inc_np = include_directories(incdir_numpy, incdir_f2py)
+
+py3.extension_module('fibby',
+           'vecmod.f90',
+           'fibby-f2pywrappers2.f90',
+           'fibbymodule.c',
+           # fibby_source,
+           incdir_f2py+'/fortranobject.c',
+           include_directories: inc_np,
+           dependencies : py3_dep,
+           install : true)
