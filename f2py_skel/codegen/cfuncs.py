@@ -1399,33 +1399,26 @@ def append_needs(need, flag=1):
             return
         if need in outneeds[n]:
             return
+        tmp = {}
         if flag:
-            tmp = {}
             if need in needs:
                 for nn in needs[need]:
                     t = append_needs(nn, 0)
                     if isinstance(t, dict):
                         for nnn in t.keys():
-                            if nnn in tmp:
-                                tmp[nnn] = tmp[nnn] + t[nnn]
-                            else:
-                                tmp[nnn] = t[nnn]
-            for nn in tmp.keys():
+                            tmp[nnn] = tmp[nnn] + t[nnn] if nnn in tmp else t[nnn]
+            for nn in tmp:
                 for nnn in tmp[nn]:
                     if nnn not in outneeds[nn]:
                         outneeds[nn] = [nnn] + outneeds[nn]
             outneeds[n].append(need)
         else:
-            tmp = {}
             if need in needs:
                 for nn in needs[need]:
                     t = append_needs(nn, flag)
                     if isinstance(t, dict):
                         for nnn in t.keys():
-                            if nnn in tmp:
-                                tmp[nnn] = t[nnn] + tmp[nnn]
-                            else:
-                                tmp[nnn] = t[nnn]
+                            tmp[nnn] = t[nnn] + tmp[nnn] if nnn in tmp else t[nnn]
             if n not in tmp:
                 tmp[n] = []
             tmp[n].append(need)
@@ -1461,7 +1454,7 @@ def get_needs():
                 print(n, saveout)
                 errmess(
                     'get_needs: no progress in sorting needs, probably circular dependence, skipping.\n')
-                out = out + saveout
+                out += saveout
                 break
             saveout = copy.copy(outneeds[n])
         if out == []:

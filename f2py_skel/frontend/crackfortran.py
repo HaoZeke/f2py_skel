@@ -243,9 +243,10 @@ def outmess(line, flag=1):
         sys.stdout.write(line)
 
 re._MAXCACHE = 50
-defaultimplicitrules = {}
-for c in "abcdefghopqrstuvwxyz$_":
-    defaultimplicitrules[c] = {'typespec': 'real'}
+defaultimplicitrules = {
+    c: {'typespec': 'real'} for c in "abcdefghopqrstuvwxyz$_"
+}
+
 for c in "ijklmn":
     defaultimplicitrules[c] = {'typespec': 'integer'}
 badnames = {}
