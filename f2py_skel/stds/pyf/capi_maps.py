@@ -17,7 +17,6 @@ f2py_version = __version__.version
 import copy
 import re
 import os
-from f2py_skel.frontend.crackfortran import markoutercomma
 from f2py_skel.stds.pyf import cb_rules
 
 f2py_version = __version__.version
@@ -26,6 +25,7 @@ f2py_version = __version__.version
 # As the needed functions cannot be determined by static inspection of the
 # code, it is safest to use import * pending a major refactoring of f2py.
 from f2py_skel.stds.auxfuncs import *
+from f2py_skel.stds import auxfuncs as aux
 
 __all__ = [
     'getctype', 'getstrlength', 'getarrdims', 'getpydocsign',
@@ -500,7 +500,7 @@ def getinit(a, var):
             try:
                 v = var["="]
                 if ',' in v:
-                    ret['init.r'], ret['init.i'] = markoutercomma(
+                    ret['init.r'], ret['init.i'] = aux.markoutercomma(
                         v[1:-1]).split('@,@')
                 else:
                     v = eval(v, {}, {})
@@ -553,7 +553,7 @@ def sign2map(a, var):
         ret['varrformat'] = 'O'
     ret['init'], ret['showinit'] = getinit(a, var)
     if hasinitvalue(var) and iscomplex(var) and not isarray(var):
-        ret['init.r'], ret['init.i'] = markoutercomma(
+        ret['init.r'], ret['init.i'] = aux.markoutercomma(
             ret['init'][1:-1]).split('@,@')
     if isexternal(var):
         ret['cbnamekey'] = a
