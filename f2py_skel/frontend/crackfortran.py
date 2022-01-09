@@ -152,11 +152,15 @@ from f2py_skel import __version__
 # The environment provided by auxfuncs.py is needed for some calls to eval.
 # As the needed functions cannot be determined by static inspection of the
 # code, it is safest to use import * pending a major refactoring of f2py.
-from f2py_skel.stds.auxfuncs import *
+# These are the only non-function definitions
+from f2py_skel.stds.auxfuncs import (
+    errmess, show, options, debugoptions,
+    wrapfuncs, isintent_dict, F2PYError, throw_error
+    )
+# The functions are called via aux
 from f2py_skel.stds import auxfuncs as aux
 from f2py_skel.stds import symbolic
 from f2py_skel.stds.pyf import capi_maps as capim
-from f2py_skel import __version__
 
 f2py_version = __version__.version
 
@@ -265,7 +269,7 @@ for n in ['int', 'double', 'float', 'char', 'short', 'long', 'void', 'case', 'wh
 
 def rmbadname1(name):
     if name in badnames:
-        errmess('rmbadname1: Replacing "%s" with "%s".\n' %
+        aux.errmess('rmbadname1: Replacing "%s" with "%s".\n' %
                 (name, badnames[name]))
         return badnames[name]
     return name
@@ -277,7 +281,7 @@ def rmbadname(names):
 
 def undo_rmbadname1(name):
     if name in invbadnames:
-        errmess('undo_rmbadname1: Replacing "%s" with "%s".\n'
+        aux.errmess('undo_rmbadname1: Replacing "%s" with "%s".\n'
                 % (name, invbadnames[name]))
         return invbadnames[name]
     return name
@@ -328,7 +332,7 @@ def is_free_format(file):
 
 
 # Read fortran (77,90) code
-def readfortrancode(ffile, dowithline=show, istop=1):
+def readfortrancode(ffile, dowithline=aux.show, istop=1):
     """
     Read fortran codes from files and
      1) Get rid of comments, line continuations, and empty lines; lower cases.
@@ -467,7 +471,7 @@ def readfortrancode(ffile, dowithline=show, istop=1):
                 while True:
                     lc = fin.readline()
                     if not lc:
-                        errmess(
+                        aux.errmess(
                             'Unexpected end of file when reading multiline\n')
                         break
                     l = l + lc
@@ -817,7 +821,7 @@ def appenddecl(decl, decl2, force=1):
             pass
         elif k in ['intent', 'check', 'dimension', 'optional',
                    'required', 'depend']:
-            errmess('appenddecl: "%s" not implemented.\n' % k)
+            aux.errmess('appenddecl: "%s" not implemented.\n' % k)
         else:
             raise Exception('appenddecl: Unknown variable definition key: ' +
                             str(k))
@@ -1129,10 +1133,10 @@ def analyzeline(m, case, line):
                                         ' to %s arguments\n' % (k, groupcache[groupcounter]['name']))
                                 groupcache[groupcounter]['args'].append(k)
                         else:
-                            errmess(
+                            aux.errmess(
                                 'analyzeline: intent(callback) %s is ignored\n' % (k))
                     else:
-                        errmess('analyzeline: intent(callback) %s is already'
+                        aux.errmess('analyzeline: intent(callback) %s is already'
                                 ' in argument list\n' % (k))
             if case in ['optional', 'required', 'public', 'external', 'private', 'intrinsic']:
                 ap = case
@@ -1185,7 +1189,7 @@ def analyzeline(m, case, line):
             try:
                 v = eval(initexpr, {}, params)
             except (SyntaxError, NameError, TypeError) as msg:
-                errmess('analyzeline: Failed to evaluate %r. Ignoring: %s\n'
+                aux.errmess('analyzeline: Failed to evaluate %r. Ignoring: %s\n'
                         % (initexpr, msg))
                 continue
             edecl[k]['='] = repr(v)
@@ -1400,7 +1404,7 @@ def analyzeline(m, case, line):
                     if name == "iso_c_binding":
                         rl = {k:capim.iso_c_binding_map.get(k) for k,v in rl.items()}
                     groupcache[groupcounter]['use'][name]['map'] = rl
-            # TODO handle ONLY for intrinsics
+        # TODO: handle only
         elif mintrin:
             # Intrinsic check
             intrmm = mintrin.groupdict()
@@ -1408,24 +1412,26 @@ def analyzeline(m, case, line):
                 groupcache[groupcounter]['use'] = {}
             intrmm_ll = [x.strip() for x in intrmm['allintrin'].split(',')]
             for l in intrmm_ll:
-                if l =="iso_c_binding":
+                if l == "iso_c_binding":
                     groupcache[groupcounter]['use'][l] = capim.iso_c_binding_map
-                elif l =="iso_fortran_env":
+                elif l == "iso_fortran_env":
                     outmess(
                         'analyzeline: ISO_FORTRAN_ENV types are not yet supported'
                     )
-                elif l =="ieee_exceptions":
+                elif l == "ieee_exceptions":
                     outmess(
                         'analyzeline: IEEE_EXCEPTIONS are not yet supported'
                     )
-                elif l =="ieee_arithmetic":
+                elif l == "ieee_arithmetic":
                     outmess(
                         'analyzeline: IEEE_ARITHMETIC are not yet supported'
                     )
-                else:
+                elif not aux.isvalidintrinsicmod(l):
                     outmess(
                         'analyzeline: Not a valid intrinsic, must be one of ["iso_c_binding", "iso_fortran_env", "ieee_exceptions", "ieee_arithmetic", "ieee_features"]'
                     )
+                else:
+                    groupcache[groupcounter]['use'][l] = {}
             else:
                 pass
         else:
@@ -1608,7 +1614,7 @@ def updatevars(typespec, selector, attrspec, entitydecl):
                 if not_has_typespec:
                     edecl['charselector'] = charselect
                 else:
-                    errmess('updatevars:%s: attempt to change empty charselector to %r. Ignoring.\n'
+                    aux.errmess('updatevars:%s: attempt to change empty charselector to %r. Ignoring.\n'
                             % (ename, charselect))
             elif charselect:
                 for k in list(charselect.keys()):
@@ -1658,7 +1664,7 @@ def updatevars(typespec, selector, attrspec, entitydecl):
                     else:
                         d1['array'] = d1['array'] + ',' + d1['len']
                         del d1['len']
-                        errmess('updatevars: "%s %s" is mapped to "%s %s(%s)"\n' % (
+                        aux.errmess('updatevars: "%s %s" is mapped to "%s %s(%s)"\n' % (
                             typespec, e, typespec, ename, d1['array']))
                 if 'array' in d1:
                     dm = 'dimension(%s)' % d1['array']
@@ -1669,7 +1675,7 @@ def updatevars(typespec, selector, attrspec, entitydecl):
                         for dm1 in edecl['attrspec']:
                             if dm1[:9] == 'dimension' and dm1 != dm:
                                 del edecl['attrspec'][-1]
-                                errmess('updatevars:%s: attempt to change %r to %r. Ignoring.\n'
+                                aux.errmess('updatevars:%s: attempt to change %r to %r. Ignoring.\n'
                                         % (ename, dm1, dm))
                                 break
 
@@ -1861,7 +1867,7 @@ def get_useparameters(block, param_map=None):
             continue
         # XXX: apply mapping
         if mapping:
-            errmess('get_useparameters: mapping for %s not impl.\n' % (mapping))
+            aux.errmess('get_useparameters: mapping for %s not impl.\n' % (mapping))
         for k, v in list(params.items()):
             if k in param_map:
                 outmess('get_useparameters: overriding parameter %s with'
@@ -2020,7 +2026,7 @@ def sortvarnames(vars):
             dep = dep[1:] + [v]
             i = i + 1
             if i > n:
-                errmess('sortvarnames: failed to compute dependencies because'
+                aux.errmess('sortvarnames: failed to compute dependencies because'
                         ' of cyclic dependencies between '
                         + ', '.join(dep) + '\n')
                 indep = indep + dep
@@ -2034,7 +2040,7 @@ def sortvarnames(vars):
 
 
 def analyzecommon(block):
-    if not hascommon(block):
+    if not aux.hascommon(block):
         return block
     commonvars = []
     for k in list(block['common'].keys()):
@@ -2065,7 +2071,7 @@ def analyzecommon(block):
                     commonvars.append(n)
             else:
                 n = e
-                errmess(
+                aux.errmess(
                     'analyzecommon: failed to extract "<name>[(<dims>)]" from "%s" in common /%s/.\n' % (e, k))
             comvars.append(n)
         block['common'][k] = comvars
@@ -2218,7 +2224,7 @@ def _get_depend_dict(name, vars, deps):
     if name in vars:
         words = vars[name].get('depend', [])
 
-        if '=' in vars[name] and not isstring(vars[name]):
+        if '=' in vars[name] and not aux.isstring(vars[name]):
             for word in word_pattern.findall(vars[name]['=']):
                 # The word_pattern may return values that are not
                 # only variables, they can be string content for instance
@@ -2385,7 +2391,7 @@ def get_parameters(vars, global_params={}):
             except Exception as msg:
                 params[n] = v
                 outmess('get_parameters: got "%s" on %s\n' % (msg, repr(v)))
-            if isstring(vars[n]) and isinstance(params[n], int):
+            if aux.isstring(vars[n]) and isinstance(params[n], int):
                 params[n] = chr(params[n])
             nl = n.lower()
             if nl != n:
@@ -2414,7 +2420,7 @@ def _eval_scalar(value, params):
     except (NameError, SyntaxError, TypeError):
         return value
     except Exception as msg:
-        errmess('"%s" in evaluating %r '
+        aux.errmess('"%s" in evaluating %r '
                 '(available names: %s)\n'
                 % (msg, value, list(params.keys())))
     return value
@@ -2609,12 +2615,12 @@ def analyzevars(block):
                     vars[n]['dimension'].append(d)
 
         if 'dimension' in vars[n]:
-            if isstringarray(vars[n]):
+            if aux.isstringarray(vars[n]):
                 if 'charselector' in vars[n]:
                     d = vars[n]['charselector']
                     if '*' in d:
                         d = d['*']
-                        errmess('analyzevars: character array "character*%s %s(%s)" is considered as "character %s(%s)"; "intent(c)" is forced.\n'
+                        aux.errmess('analyzevars: character array "character*%s %s(%s)" is considered as "character %s(%s)"; "intent(c)" is forced.\n'
                                 % (d, n,
                                    ','.join(vars[n]['dimension']),
                                    n, ','.join(vars[n]['dimension'] + [d])))
@@ -2625,7 +2631,7 @@ def analyzevars(block):
                         if 'c' not in vars[n]['intent']:
                             vars[n]['intent'].append('c')
                     else:
-                        errmess(
+                        aux.errmess(
                             "analyzevars: charselector=%r unhandled.\n" % (d))
 
         if 'check' not in vars[n] and 'args' in block and n in block['args']:
@@ -2635,8 +2641,8 @@ def analyzevars(block):
             # initialization expressions.
             n_deps = vars[n].get('depend', [])
             n_checks = []
-            n_is_input = l_or(isintent_in, isintent_inout,
-                              isintent_inplace)(vars[n])
+            n_is_input = aux.l_or(aux.isintent_in, aux.isintent_inout,
+                              aux.isintent_inplace)(vars[n])
             if 'dimension' in vars[n]:  # n is array
                 for i, d in enumerate(vars[n]['dimension']):
                     coeffs_and_deps = dimension_exprs.get(d)
@@ -2707,7 +2713,7 @@ def analyzevars(block):
                                 vars[v]['depend'] = list(set(v_deps))
                             if n not in v_deps:
                                 n_deps.append(v)
-            elif isstring(vars[n]):
+            elif aux.isstring(vars[n]):
                 if 'charselector' in vars[n]:
                     if '*' in vars[n]['charselector']:
                         length = _eval_length(vars[n]['charselector']['*'],
@@ -2784,7 +2790,7 @@ def analyzevars(block):
         else:
             neededvars = copy.copy(block['args'])
         for n in list(vars.keys()):
-            if l_or(isintent_callback, isintent_aux)(vars[n]):
+            if aux.l_or(aux.isintent_callback, aux.isintent_aux)(vars[n]):
                 neededvars.append(n)
         if 'entry' in block:
             neededvars.extend(list(block['entry'].keys()))
@@ -2966,7 +2972,7 @@ def crack2fortrangen(block, tab='\n', as_interface=False):
         vars = block['vars']
         for a in block['args']:
             a = expr2name(a, block, argsl)
-            if not isintent_callback(vars[a]):
+            if not aux.isintent_callback(vars[a]):
                 argsl.append(a)
         if block['block'] == 'function' or argsl:
             args = '(%s)' % ','.join(argsl)
@@ -3080,7 +3086,7 @@ def vars2fortran(block, vars, args, tab='', as_interface=False):
                 if a not in nout:
                     nout.append(a)
             else:
-                errmess(
+                aux.errmess(
                     'vars2fortran: Confused?!: "%s" is not defined in vars.\n' % a)
     if 'varnames' in block:
         nout.extend(block['varnames'])
@@ -3092,10 +3098,10 @@ def vars2fortran(block, vars, args, tab='', as_interface=False):
         if 'depend' in vars[a]:
             for d in vars[a]['depend']:
                 if d in vars and 'depend' in vars[d] and a in vars[d]['depend']:
-                    errmess(
+                    aux.errmess(
                         'vars2fortran: Warning: cross-dependence between variables "%s" and "%s"\n' % (a, d))
         if 'externals' in block and a in block['externals']:
-            if isintent_callback(vars[a]):
+            if aux.isintent_callback(vars[a]):
                 ret = '%s%sintent(callback) %s' % (ret, tab, a)
             ret = '%s%sexternal %s' % (ret, tab, a)
             if isoptional(vars[a]):
@@ -3110,7 +3116,7 @@ def vars2fortran(block, vars, args, tab='', as_interface=False):
             if cont:
                 continue
         if a not in vars:
-            show(vars)
+            aux.show(vars)
             outmess('vars2fortran: No definition for argument "%s".\n' % a)
             continue
         if a == block['name']:
@@ -3125,7 +3131,7 @@ def vars2fortran(block, vars, args, tab='', as_interface=False):
                 if a in args:
                     ret = '%s%sexternal %s' % (ret, tab, a)
                 continue
-            show(vars[a])
+            aux.show(vars[a])
             outmess('vars2fortran: No typespec for argument "%s".\n' % a)
             continue
         vardef = vars[a]['typespec']
@@ -3222,7 +3228,7 @@ if __name__ == "__main__":
     f = 1
     f2 = 0
     f3 = 0
-    showblocklist = 0
+    aux.showblocklist = 0
     for l in sys.argv[1:]:
         if l == '':
             pass
@@ -3253,12 +3259,12 @@ if __name__ == "__main__":
             skipemptyends = 1
         elif l == '-h':
             f2 = 1
-        elif l == '-show':
-            showblocklist = 1
+        elif l == '-aux.show':
+            aux.showblocklist = 1
         elif l == '-m':
             f3 = 1
         elif l[0] == '-':
-            errmess('Unknown option %s\n' % repr(l))
+            aux.errmess('Unknown option %s\n' % repr(l))
         elif f2:
             f2 = 0
             pyffilename = l
@@ -3270,7 +3276,7 @@ if __name__ == "__main__":
                 open(l).close()
                 files.append(l)
             except OSError as detail:
-                errmess(f'OSError: {detail!s}\n')
+                aux.errmess(f'OSError: {detail!s}\n')
         else:
             funcs.append(l)
     if not strictf77 and f77modulename and not skipemptyends:
@@ -3287,5 +3293,5 @@ if __name__ == "__main__":
         pyf = crack2fortran(postlist)
         with open(pyffilename, 'w') as f: 
             f.write(pyf)
-    if showblocklist:
-        show(postlist)
+    if aux.showblocklist:
+        aux.show(postlist)

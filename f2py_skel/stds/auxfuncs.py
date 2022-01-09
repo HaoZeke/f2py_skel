@@ -23,32 +23,6 @@ from functools import reduce
 from f2py_skel import __version__
 from f2py_skel.codegen import cfuncs
 
-__all__ = [
-    'applyrules', 'debugcapi', 'dictappend', 'errmess', 'gentitle',
-    'getargs2', 'getcallprotoargument', 'getcallstatement',
-    'getfortranname', 'getpymethoddef', 'getrestdoc', 'getusercode',
-    'getusercode1', 'hasbody', 'hascallstatement', 'hascommon',
-    'hasexternals', 'hasinitvalue', 'hasnote', 'hasresultnote',
-    'isallocatable', 'isarray', 'isarrayofstrings', 'iscomplex',
-    'iscomplexarray', 'iscomplexfunction', 'iscomplexfunction_warn',
-    'isdouble', 'isdummyroutine', 'isexternal', 'isfunction',
-    'isfunction_wrap', 'isint1array', 'isinteger', 'isintent_aux',
-    'isintent_c', 'isintent_callback', 'isintent_copy', 'isintent_dict',
-    'isintent_hide', 'isintent_in', 'isintent_inout', 'isintent_inplace',
-    'isintent_nothide', 'isintent_out', 'isintent_overwrite', 'islogical',
-    'islogicalfunction', 'islong_complex', 'islong_double',
-    'islong_doublefunction', 'islong_long', 'islong_longfunction',
-    'ismodule', 'ismoduleroutine', 'isoptional', 'isprivate', 'isrequired',
-    'isroutine', 'isderivedtype', 'isscalar', 'issigned_long_longarray', 'isstring',
-    'isstringarray', 'isstringfunction', 'issubroutine',
-    'issubroutine_wrap', 'isthreadsafe', 'isunsigned', 'isunsigned_char',
-    'isunsigned_chararray', 'isunsigned_long_long',
-    'isunsigned_long_longarray', 'isvalidintrinsicmod', 'isunsigned_short',
-    'isunsigned_shortarray', 'l_and', 'l_not', 'l_or', 'outmess',
-    'replace', 'show', 'stripcomma', 'throw_error',
-]
-
-
 f2py_version = __version__.version
 
 
@@ -863,6 +837,7 @@ def applyrules(rules, d, var={}):
 #  Crackfortran  #
 ##################
 
+# Crackfortran helpers
 def split_by_unquoted(line, characters):
     """
     Splits the line into (line[:i], line[i:]),
@@ -925,7 +900,6 @@ def markoutercomma(line, comma=','):
 def unmarkouterparen(line):
     r = line.replace('@(@', '(').replace('@)@', ')')
     return r
-
 
 
 # Intrinsic modules

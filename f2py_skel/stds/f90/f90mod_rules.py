@@ -26,19 +26,22 @@ from f2py_skel.frontend.crackfortran import undo_rmbadname, undo_rmbadname1
 # The environment provided by auxfuncs.py is needed for some calls to eval.
 # As the needed functions cannot be determined by static inspection of the
 # code, it is safest to use import * pending a major refactoring of f2py.
-from f2py_skel.stds.auxfuncs import *
-
-options = {}
-
+# These are the only non-function definitions
+from f2py_skel.stds.auxfuncs import (
+    errmess, show, options, debugoptions,
+    wrapfuncs, isintent_dict, F2PYError, throw_error,
+    )
+# The other functions are called via aux
+from f2py_skel.stds import auxfuncs as aux
 
 def findf90modules(m):
-    if ismodule(m):
+    if aux.ismodule(m):
         return [m]
-    if not hasbody(m):
+    if not aux.hasbody(m):
         return []
     ret = []
     for b in m['body']:
-        if ismodule(b):
+        if aux.ismodule(b):
             ret.append(b)
         else:
             ret = ret + findf90modules(b)
@@ -105,18 +108,18 @@ def buildhooks(pymod):
         sargsp = []
         ifargs = []
         mfargs = []
-        if hasbody(m):
+        if aux.hasbody(m):
             for b in m['body']:
                 notvars.append(b['name'])
         for n in m['vars'].keys():
             var = m['vars'][n]
-            if (n not in notvars) and (not l_or(isintent_hide, isprivate)(var)):
+            if (n not in notvars) and (not aux.l_or(aux.isintent_hide, aux.isprivate)(var)):
                 onlyvars.append(n)
                 mfargs.append(n)
-        outmess('\t\tConstructing F90 module support for "%s"...\n' %
+        aux.outmess('\t\tConstructing F90 module support for "%s"...\n' %
                 (m['name']))
         if onlyvars:
-            outmess('\t\t  Variables: %s\n' % (' '.join(onlyvars)))
+            aux.outmess('\t\t  Variables: %s\n' % (' '.join(onlyvars)))
         chooks = ['']
 
         def cadd(line, s=chooks):
@@ -129,7 +132,7 @@ def buildhooks(pymod):
         vrd = capi_maps.modsign2map(m)
         cadd('static FortranDataDef f2py_%s_def[] = {' % (m['name']))
         dadd('\\subsection{Fortran 90/95 module \\texttt{%s}}\n' % (m['name']))
-        if hasnote(m):
+        if aux.hasnote(m):
             note = m['note']
             if isinstance(note, list):
                 note = '\n'.join(note)
@@ -147,7 +150,7 @@ def buildhooks(pymod):
             if not dms:
                 dms = '-1'
             use_fgetdims2 = fgetdims2
-            if isstringarray(var):
+            if aux.isstringarray(var):
                 if 'charselector' in var and 'len' in var['charselector']:
                     cadd('\t{"%s",%s,{{%s,%s}},%s},'
                          % (undo_rmbadname1(n), dm['rank'], dms, var['charselector']['len'], at))
@@ -160,12 +163,12 @@ def buildhooks(pymod):
                      (undo_rmbadname1(n), dm['rank'], dms, at))
             dadd('\\item[]{{}\\verb@%s@{}}' %
                  (capi_maps.getarrdocsign(n, var)))
-            if hasnote(var):
+            if aux.hasnote(var):
                 note = var['note']
                 if isinstance(note, list):
                     note = '\n'.join(note)
                 dadd('--- %s' % (note))
-            if isallocatable(var):
+            if aux.isallocatable(var):
                 fargs.append('f2py_%s_getdims_%s' % (m['name'], n))
                 efargs.append(fargs[-1])
                 sargs.append(
@@ -189,16 +192,16 @@ def buildhooks(pymod):
                 iadd('\tf2py_%s_def[i_f2py++].data = %s;' % (m['name'], n))
         if onlyvars:
             dadd('\\end{description}')
-        if hasbody(m):
+        if aux.hasbody(m):
             for b in m['body']:
-                if not isroutine(b):
-                    outmess("f90mod_rules.buildhooks:"
+                if not aux.isroutine(b):
+                    aux.outmess("f90mod_rules.buildhooks:"
                             f" skipping {b['block']} {b['name']}\n")
                     continue
                 modobjs.append('%s()' % (b['name']))
                 b['modulename'] = m['name']
                 api, wrap = rules.buildapi(b)
-                if isfunction(b):
+                if aux.isfunction(b):
                     fhooks[0] = fhooks[0] + wrap
                     fargs.append('f2pywrap_%s_%s' % (m['name'], b['name']))
                     ifargs.append(func2subr.createfuncwrapper(b, signature=1))
@@ -212,10 +215,10 @@ def buildhooks(pymod):
                         fargs.append(b['name'])
                         mfargs.append(fargs[-1])
                 api['externroutines'] = []
-                ar = applyrules(api, vrd)
+                ar = aux.applyrules(api, vrd)
                 ar['docs'] = []
                 ar['docshort'] = []
-                ret = dictappend(ret, ar)
+                ret = aux.dictappend(ret, ar)
                 cadd('\t{"%s",-1,{{-1}},0,NULL,(void *)f2py_rout_#modulename#_%s_%s,doc_f2py_rout_#modulename#_%s_%s},' %
                      (b['name'], m['name'], b['name'], m['name'], b['name']))
                 sargs.append('char *%s' % (b['name']))
