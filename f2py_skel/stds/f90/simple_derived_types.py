@@ -123,12 +123,11 @@ def extract_typedat(typeblock):
 
 def gen_typedecl(structname, tvars):
     vdefs = [''.join(f"{x.ctype} {x.varname};") for x in tvars]
-    tdecl = f"""
+    return f"""
     typedef struct {{
     {' '.join(vdefs)}
     }} {structname};
     """
-    return tdecl
 
 
 # TODO: Generalize to have an extract_from_pydict in need
@@ -137,13 +136,12 @@ def gen_typefunc(structname, tvars):
         f"{tv.py_conv}(&xstruct->{tv.varname}, PyDict_GetItemString(x_capi, \"{tv.varname}\"), \"Error during conversion of {tv.varname} to {tv.ctype}\");\n\t "
         for tv in tvars
     ]
-    rvfunc = f"""
+    return f"""
 static int {structname}_from_pyobj({structname} *xstruct, PyObject *x_capi){{
    {''.join(clines)}
    return 1;
    }}
     """
-    return rvfunc
 
 
 def gen_typeret(structname, tvars, vname):

@@ -173,7 +173,7 @@ def isunsigned_long_long(var):
 def isdouble(var):
     if not isscalar(var):
         return 0
-    if not var.get('typespec') == 'real':
+    if var.get('typespec') != 'real':
         return 0
     return get_kind(var) == '8'
 
@@ -181,7 +181,7 @@ def isdouble(var):
 def islong_double(var):
     if not isscalar(var):
         return 0
-    if not var.get('typespec') == 'real':
+    if var.get('typespec') != 'real':
         return 0
     return get_kind(var) == '16'
 
@@ -255,11 +255,11 @@ def ismoduleroutine(rout):
 
 
 def ismodule(rout):
-    return 'block' in rout and 'module' == rout['block']
+    return 'block' in rout and rout['block'] == 'module'
 
 
 def isfunction(rout):
-    return 'block' in rout and 'function' == rout['block']
+    return 'block' in rout and rout['block'] == 'function'
 
 
 def isfunction_wrap(rout):
@@ -269,7 +269,7 @@ def isfunction_wrap(rout):
 
 
 def issubroutine(rout):
-    return 'block' in rout and 'subroutine' == rout['block']
+    return 'block' in rout and rout['block'] == 'subroutine'
 
 
 def issubroutine_wrap(rout):
@@ -300,10 +300,7 @@ def isroutine(rout):
 def islogicalfunction(rout):
     if not isfunction(rout):
         return 0
-    if 'result' in rout:
-        a = rout['result']
-    else:
-        a = rout['name']
+    a = rout['result'] if 'result' in rout else rout['name']
     if a in rout['vars']:
         return islogical(rout['vars'][a])
     return 0
@@ -312,10 +309,7 @@ def islogicalfunction(rout):
 def islong_longfunction(rout):
     if not isfunction(rout):
         return 0
-    if 'result' in rout:
-        a = rout['result']
-    else:
-        a = rout['name']
+    a = rout['result'] if 'result' in rout else rout['name']
     if a in rout['vars']:
         return islong_long(rout['vars'][a])
     return 0
@@ -324,10 +318,7 @@ def islong_longfunction(rout):
 def islong_doublefunction(rout):
     if not isfunction(rout):
         return 0
-    if 'result' in rout:
-        a = rout['result']
-    else:
-        a = rout['name']
+    a = rout['result'] if 'result' in rout else rout['name']
     if a in rout['vars']:
         return islong_double(rout['vars'][a])
     return 0
@@ -336,10 +327,7 @@ def islong_doublefunction(rout):
 def iscomplexfunction(rout):
     if not isfunction(rout):
         return 0
-    if 'result' in rout:
-        a = rout['result']
-    else:
-        a = rout['name']
+    a = rout['result'] if 'result' in rout else rout['name']
     if a in rout['vars']:
         return iscomplex(rout['vars'][a])
     return 0
@@ -362,10 +350,7 @@ def iscomplexfunction_warn(rout):
 def isstringfunction(rout):
     if not isfunction(rout):
         return 0
-    if 'result' in rout:
-        a = rout['result']
-    else:
-        a = rout['name']
+    a = rout['result'] if 'result' in rout else rout['name']
     if a in rout['vars']:
         return isstring(rout['vars'][a])
     return 0
@@ -504,10 +489,7 @@ def hasnote(var):
 def hasresultnote(rout):
     if not isfunction(rout):
         return 0
-    if 'result' in rout:
-        a = rout['result']
-    else:
-        a = rout['name']
+    a = rout['result'] if 'result' in rout else rout['name']
     if a in rout['vars']:
         return hasnote(rout['vars'][a])
     return 0
@@ -665,9 +647,7 @@ def getcallprotoargument(rout, cb_map={}):
             ctype = getctype(var)
             if l_and(isintent_c, l_or(isscalar, iscomplex))(var):
                 pass
-            elif isstring(var):
-                pass
-            else:
+            elif not isstring(var):
                 ctype = ctype + '*'
             if isstring(var) or isarrayofstrings(var):
                 arg_types2.append('size_t')
@@ -727,9 +707,7 @@ def getargs2(rout):
 def getrestdoc(rout):
     if 'f2pymultilines' not in rout:
         return None
-    k = None
-    if rout['block'] == 'python module':
-        k = rout['block'], rout['name']
+    k = (rout['block'], rout['name']) if rout['block'] == 'python module' else None
     return rout['f2pymultilines'].get(k, None)
 
 
@@ -836,19 +814,13 @@ def applyrules(rules, d, var={}):
                         for i in rules[k][k1]:
                             if isinstance(i, dict):
                                 res = applyrules({'supertext': i}, d, var)
-                                if 'supertext' in res:
-                                    i = res['supertext']
-                                else:
-                                    i = ''
+                                i = res['supertext'] if 'supertext' in res else ''
                             ret[k].append(replace(i, d))
                     else:
                         i = rules[k][k1]
                         if isinstance(i, dict):
                             res = applyrules({'supertext': i}, d)
-                            if 'supertext' in res:
-                                i = res['supertext']
-                            else:
-                                i = ''
+                            i = res['supertext'] if 'supertext' in res else ''
                         ret[k].append(replace(i, d))
         else:
             errmess('applyrules: ignoring rule %s.\n' % repr(rules[k]))
@@ -889,16 +861,16 @@ def markouterparen(line):
     f = 0
     for c in line:
         if c == '(':
-            f = f + 1
+            f += 1
             if f == 1:
-                l = l + '@(@'
+                l += '@(@'
                 continue
         elif c == ')':
-            f = f - 1
+            f -= 1
             if f == 0:
-                l = l + '@)@'
+                l += '@)@'
                 continue
-        l = l + c
+        l += c
     return l
 
 
@@ -923,8 +895,7 @@ def markoutercomma(line, comma=','):
 
 
 def unmarkouterparen(line):
-    r = line.replace('@(@', '(').replace('@)@', ')')
-    return r
+    return line.replace('@(@', '(').replace('@)@', ')')
 
 
 
